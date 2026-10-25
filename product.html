@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Racing Jacket | Formula One Jacket</title>
+<meta name="description" content="Padded racing jacket in black, white and red. Sizes S to XXL, cash on delivery across Egypt.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,800;1,700;1,800&family=Inter:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Silkscreen&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="product">
+<main>
+  <!-- gallery beside a compact purchase panel -->
+  <section class="shop">
+    <div class="gallery">
+      <div class="stage" id="stage">
+        <img id="mainImg" src="img/p-front.webp" alt="" width="1024" height="1536">
+        <div class="loupe" id="loupe" aria-hidden="true"></div>
+      </div>
+      <div class="thumbs" id="thumbs" role="tablist"></div>
+    </div>
+
+    <div class="panel" id="panel">
+      <p class="crumb" data-i18n="pSub">Black, white and red</p>
+      <h1 class="h" data-i18n="pName">Racing Jacket</h1>
+      <p class="p-price"><b data-price></b> <span data-i18n="egp">EGP</span></p>
+
+      <div class="p-row">
+        <span class="p-label" data-i18n="size">Size</span>
+        <a href="#fit" class="p-link" data-i18n="sizeGuide">Size guide</a>
+      </div>
+      <div class="sizes-pick" id="sizesPick" role="radiogroup" aria-label="Size"></div>
+      <p class="stock" id="stock" aria-live="polite"></p>
+
+      <div class="p-row">
+        <label class="p-label" for="qty" data-i18n="fQty">Quantity</label>
+        <input id="qty" type="number" min="1" max="10" value="1" inputmode="numeric">
+      </div>
+
+      <ul class="p-facts">
+        <li><b data-i18n="delEstT">Delivery</b><span data-i18n="delEst">2 to 5 days, all governorates</span></li>
+        <li><b data-i18n="payT">Payment</b><span data-i18n="payNote">Cash on delivery or InstaPay</span></li>
+      </ul>
+
+      <button type="button" class="btn btn-red btn-full" id="addCart" data-i18n="addCart">Add to cart</button>
+      <a class="p-wa" id="askWa" href="#" data-i18n="askSize">Ask about sizing on WhatsApp</a>
+    </div>
+  </section>
+
+  <section class="fit" id="fit">
+    <div class="fit-copy">
+      <h2 data-i18n="fitTitle">Fit and details</h2>
+      <p class="note" data-i18n="sizeNote">Relaxed, slightly oversized fit. Between two? Take the smaller.</p>
+      <!-- mock: replace with real measurements of your stock -->
+      <div class="tower" id="tower" role="radiogroup" aria-label="Size guide">
+        <div class="tower-head"><span></span><span data-i18n="size">Size</span><span data-i18n="chest">Chest</span><span data-i18n="length">Length</span></div>
+      </div>
+    </div>
+    <figure class="size-fig" aria-hidden="true">
+      <img src="img/p-front.webp" alt="" width="1024" height="1536" loading="lazy">
+      <i class="m-chest"></i><i class="m-len"></i>
+      <b class="v v-chest" id="vChest"></b><b class="v v-len" id="vLen"></b>
+    </figure>
+  </section>
+</main>
+
+<!-- phone purchase bar: pick a size and buy without scrolling back up -->
+<div class="buybar" id="buyBar" hidden>
+  <div><b class="bb-price"><span data-price></span> <span data-i18n="egp">EGP</span></b></div>
+  <select id="bbSize" aria-label="Size"></select>
+  <button type="button" class="btn btn-red" id="bbAdd" data-i18n="addCart">Add to cart</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

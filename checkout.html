@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout | Formula One Jacket</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,800;1,700;1,800&family=Inter:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Silkscreen&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="checkout">
+<main>
+  <section class="empty" id="emptyCart" hidden>
+    <h1 class="h" data-i18n="emptyTitle">Your cart is empty</h1>
+    <p data-i18n="emptySub">Pick your size on the jacket page, then come back here.</p>
+    <a href="product.html" class="btn btn-red" data-i18n="emptyBtn">See the jacket</a>
+  </section>
+
+  <section class="order" id="order">
+    <div class="order-copy">
+      <h1 class="h" data-i18n="orderTitle">Checkout</h1>
+      <p data-i18n="orderSub">Four fields, then your order goes to our WhatsApp. We confirm, ship, you pay on delivery.</p>
+      <div class="summary" aria-live="polite">
+        <h2 data-i18n="sumTitle">Your order</h2>
+        <div class="sum-line"><img src="img/p-front.webp" alt="" width="64" height="96"><div><b data-i18n="pName">Racing Jacket</b><span id="sumItem"></span><a href="product.html" class="p-link" data-i18n="editCart">Change size</a></div><b id="sumLine"></b></div>
+        <p class="sum-row"><span data-i18n="sub">Subtotal</span><b id="sumSub"></b></p>
+        <p class="sum-row"><span data-i18n="ship">Delivery</span><b id="sumShip"></b></p>
+        <p class="sum-row total"><span data-i18n="total">Total</span><b id="sumTotal"></b></p>
+      </div>
+    </div>
+    <form id="orderForm" novalidate>
+      <div class="field">
+        <label for="f-name" data-i18n="fName">Full name</label>
+        <input id="f-name" name="name" required autocomplete="name">
+        <small class="err" data-i18n="eName">Please enter your name</small>
+      </div>
+      <div class="field">
+        <label for="f-phone" data-i18n="fPhone">Phone</label>
+        <input id="f-phone" name="phone" required inputmode="tel" autocomplete="tel" pattern="^(\+?20|0)?1[0125][0-9]{8}$" placeholder="01xxxxxxxxx" dir="ltr">
+        <small class="err" data-i18n="ePhone">Enter a valid Egyptian mobile number</small>
+      </div>
+      <div class="field">
+        <label for="f-gov" data-i18n="fGov">Governorate</label>
+        <select id="f-gov" name="gov" required></select>
+        <small class="err" data-i18n="eGov">Choose your governorate</small>
+      </div>
+      <div class="field">
+        <label for="f-addr" data-i18n="fAddr">Address</label>
+        <textarea id="f-addr" name="addr" rows="2" required autocomplete="street-address"></textarea>
+        <small class="err" data-i18n="eAddr">Please enter your address</small>
+      </div>
+      <fieldset class="field pay">
+        <legend data-i18n="payTitle">Payment</legend>
+        <label class="pay-opt"><input type="radio" name="pay" value="cod" checked><span><b data-i18n="payCod">Cash on delivery</b><small data-i18n="payCodNote">Pay the courier when the parcel arrives.</small></span></label>
+        <label class="pay-opt"><input type="radio" name="pay" value="instapay"><span><b>InstaPay</b><small data-i18n="payIpNote">Pay now from your bank app, then send us the screenshot.</small></span></label>
+        <div class="ip" id="ipBox" hidden>
+          <p class="ip-row"><span data-i18n="ipTo">Send to</span><b id="ipId" dir="ltr"></b><button type="button" class="copy" data-copy="id" data-i18n="copy">Copy</button></p>
+          <p class="ip-row"><span data-i18n="ipAmount">Amount</span><b id="ipAmt" dir="ltr"></b><button type="button" class="copy" data-copy="amount" id="copyAmt" data-i18n="copy">Copy</button></p>
+          <p class="ip-hint" id="ipHint" data-i18n="ipGovFirst">Choose your governorate first, so the amount includes delivery.</p>
+          <p class="copied" id="copied" aria-live="polite"></p>
+          <div class="field">
+            <label for="f-shot" data-i18n="fShot">Payment screenshot</label>
+            <input id="f-shot" name="shot" type="file" accept="image/*" required disabled>
+            <small class="err" data-i18n="eShot">Add a screenshot of the InstaPay transfer (an image up to 10 MB)</small>
+            <img id="shotPrev" class="shot-prev" alt="" hidden>
+          </div>
+        </div>
+      </fieldset>
+      <button class="btn btn-red btn-go" type="submit" id="sendBtn">
+        <span class="mini-lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <span data-i18n="send">Place order on WhatsApp</span>
+      </button>
+    </form>
+    <div class="confirm" id="confirm" hidden>
+      <h2 data-i18n="confTitle">Order ready</h2>
+      <p data-i18n="confSub">Send it in WhatsApp so we can confirm it. Your order is not placed until we reply.</p>
+      <pre id="confText"></pre>
+      <a class="btn btn-red btn-full" id="confBtn" href="#" target="_blank" rel="noopener" data-i18n="confBtn">Send on WhatsApp</a>
+      <div class="ip-send" id="ipSend" hidden>
+        <p data-i18n="ipStep">Then send the payment screenshot in the same chat.</p>
+        <button type="button" class="btn btn-dark btn-full" id="shareShot" data-i18n="shareShot">Send the screenshot</button>
+        <p class="ip-hint" id="ipAttach" data-i18n="ipAttach">In WhatsApp, tap the paperclip and attach the screenshot.</p>
+      </div>
+      <button type="button" class="p-link" id="confEdit" data-i18n="confEdit">Edit order</button>
+    </div>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

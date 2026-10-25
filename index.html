@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formula One Jacket | Racing Jacket, Cash on Delivery in Egypt</title>
+<meta name="description" content="Padded racing jacket in black, white and red. Cash on delivery across Egypt.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,800;1,700;1,800&family=Inter:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Silkscreen&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="home">
+
+<!-- pixel shapes reused across the page -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="chev" viewBox="0 0 30 50"><path d="M0 0h10v10H0zM10 10h10v10H10zM20 20h10v10H20zM10 30h10v10H10zM0 40h10v10H0z"/></symbol>
+</svg>
+
+<!-- race-start countdown: 5 pixel lights come on with 5..1, then lights out and a car crosses -->
+<div class="lights" id="lights" aria-hidden="true">
+  <svg class="mark" data-mark></svg>
+  <p class="count-label" data-i18n="raceStart">Race start</p>
+  <b class="count" id="count">5</b>
+  <div class="gantry"><i></i><i></i><i></i><i></i><i></i></div>
+  <p class="go" id="go" data-i18n="go">Lights out</p>
+  <img class="loader-car" src="img/cars/red23.png" alt="" width="560" height="137">
+  <p class="load-foot"><span data-store-name></span><b id="pct">00%</b></p>
+  <button type="button" class="skip" id="skipIntro" data-i18n="skip">Skip</button>
+</div>
+
+<main>
+  <!-- hero: headline beside a 360 turntable video -->
+  <section class="hero">
+    <div class="hero-copy">
+      <svg class="stripe" data-stripe="34" aria-hidden="true"></svg>
+      <h1><span data-i18n="h1a">Racing heritage.</span> <span class="red" data-i18n="h1b">Street energy.</span></h1>
+      <p class="hero-sub" data-i18n="heroSub">A padded racing jacket in black, white and red, with every patch embroidered. Pay cash when it arrives.</p>
+      <p class="hero-price"><b data-price></b> <span data-i18n="egp">EGP</span></p>
+      <div class="hero-ctas">
+        <a href="shop.html" class="btn btn-red" data-i18n="shopBtn">Shop the jacket</a>
+        <a href="product.html" class="btn btn-ghost" data-i18n="viewDetails">View details</a>
+      </div>
+      <a href="product.html#fit" class="hero-fit" data-i18n="findFit">Find your fit</a>
+    </div>
+
+    <figure class="viewer" id="viewer">
+      <video id="spin" data-src="img/spin.mp4" poster="img/spin-poster.jpg" muted loop playsinline width="720" height="720"></video>
+      <span class="hud hud-tl" aria-hidden="true">360°</span>
+      <span class="hud hud-tr" id="deg" aria-hidden="true">000°</span>
+      <div class="viewer-bar">
+        <!-- left and right are physical here, so the group keeps left-to-right order in Arabic too -->
+        <div class="spin-ctl" dir="ltr">
+          <button type="button" class="spin-btn" id="turnL" data-i18n-label="turnL" aria-label="Turn left"><svg viewBox="0 0 30 50" width="9" height="15" aria-hidden="true"><use href="#chev" transform="matrix(-1 0 0 1 30 0)"/></svg></button>
+          <button type="button" class="spin-toggle" id="spinToggle">
+            <svg viewBox="0 0 10 10" width="12" height="12" aria-hidden="true"><path class="i-pause" d="M1 1h3v8H1zM6 1h3v8H6z"/><path class="i-play" d="M2 1h2v8H2zM4 2h2v6H4zM6 3h2v4H6z"/></svg>
+            <span data-i18n="pause">Pause</span>
+          </button>
+          <button type="button" class="spin-btn" id="turnR" data-i18n-label="turnR" aria-label="Turn right"><svg viewBox="0 0 30 50" width="9" height="15" aria-hidden="true"><use href="#chev"/></svg></button>
+        </div>
+        <i class="seg" id="seg" aria-hidden="true"></i>
+        <span class="hint" data-i18n="drag">Drag to turn</span>
+      </div>
+    </figure>
+
+    <ul class="feats">
+      <li><a href="product.html"><svg class="chev" aria-hidden="true"><use href="#chev"/></svg><b data-i18n="f1t">Front and back details</b><span data-i18n="f1s">Photos from four angles</span></a></li>
+      <li><a href="product.html#fit"><svg class="chev" aria-hidden="true"><use href="#chev"/></svg><b data-i18n="f2t">Find your size</b><span data-i18n="f2s">Chest and length for each size</span></a></li>
+      <li><a href="faq.html#delivery"><svg class="chev" aria-hidden="true"><use href="#chev"/></svg><b data-i18n="f3t">Delivery and payment</b><span data-i18n="f3s">Cash on delivery, 2 to 5 days</span></a></li>
+    </ul>
+  </section>
+
+  <!-- pixel track: every car in the set, looping -->
+  <div class="track" aria-hidden="true"><div class="lane" id="lane"></div></div>
+
+  <section class="grid-sec">
+    <h2 data-i18n="shopTitle">Shop the jacket</h2>
+    <ul class="grid" data-grid></ul>
+  </section>
+
+  <section class="why">
+    <h2 class="sr-only" data-i18n="whyTitle">Why shop with us</h2>
+    <img src="img/why-banner.webp" data-i18n-alt="whyAlt" alt="" width="1586" height="992" loading="lazy">
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
