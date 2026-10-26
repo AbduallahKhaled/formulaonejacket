@@ -1,13 +1,18 @@
-// Edit these before launch.
+// Live settings come from the admin through api/config.php (window.STORE); the values after ?? are the fallback
+// for when the page is opened without the PHP backend.
+const S = window.STORE || {};
+const LIVE = !!window.STORE; // orders and discount codes go to the server only when it is there
 const STORE_NAME = "Formula One Jacket";
-const PRICE = 1450;               // EGP, placeholder
-const WAS = 0;                    // old price in EGP; above PRICE it shows a "Sale" tag and strikes the old price
-const WA_NUMBER = "201000000000"; // placeholder: country code + number, no "+"
-const INSTAPAY = "yourstore@instapay"; // placeholder: your InstaPay address, or the mobile number linked to it
-// mock measurements and stock: replace with the real numbers
-const SIZES = [["S", 108, 66], ["M", 114, 68], ["L", 120, 70], ["XL", 126, 72], ["XXL", 132, 74]];
-const STOCK = { S: 4, M: 12, L: 9, XL: 2, XXL: 0 };
-const SHIP = { Cairo: 70, Giza: 70, other: 90 }; // EGP by governorate
+const PRICE = S.price ?? 1450;             // EGP
+const WAS = S.was ?? 0;                    // old price in EGP; above PRICE it shows a "Sale" tag and strikes the old price
+const WA_NUMBER = S.wa ?? "201000000000";  // country code + number, no "+"
+const INSTAPAY = S.instapay ?? "yourstore@instapay"; // empty when InstaPay is turned off in the admin
+const PAY_COD = S.cod ?? true;
+const SIZES = S.sizes ?? [["S", 108, 66], ["M", 114, 68], ["L", 120, 70], ["XL", 126, 72], ["XXL", 132, 74]];
+const STOCK = S.stock ?? { S: 4, M: 12, L: 9, XL: 2, XXL: 0 }; // free to sell: shelf stock minus open orders
+const SHIP = S.ship ? { ...S.ship, other: S.shipOther } : { Cairo: 70, Giza: 70, other: 90 }; // EGP by governorate
+const MAXQ = S.maxQty ?? 10;
+const REVIEWS = S.reviews ?? [];
 
 const GOVS = [
   ["Cairo", "القاهرة"], ["Giza", "الجيزة"], ["Alexandria", "الإسكندرية"], ["Qalyubia", "القليوبية"],
@@ -67,6 +72,12 @@ const AR = {
   copied: "اتنسخ", copyFail: "النسخ مش شغال. علّم على الرقم وانسخه.", ipGovFirst: "اختار المحافظة الأول عشان المبلغ يشمل الشحن.",
   fShot: "صورة التحويل", eShot: "ضيف صورة تحويل إنستاباي (صورة لحد ١٠ ميجا)", ipStep: "بعد كده ابعت صورة التحويل في نفس الشات.",
   shareShot: "ابعت صورة التحويل", ipAttach: "في واتساب دوس على علامة المشبك وابعت الصورة.",
+  fCode: "كود الخصم (لو معاك)", apply: "تطبيق", disc: "الخصم", codeOk: "تم تطبيق خصم {n} ج.م", codeBad: "الكود ده مش شغال. اتأكد منه.",
+  codeOld: "الكود ده خلص أو انتهى.", codeMin: "الكود ده بيشتغل على طلبات من {n} ج.م وأكتر.", tryLater: "محاولات كتير. استنى دقايق وجرب تاني.",
+  sending: "جاري الإرسال…", errStock: "باقي {n} بس من مقاس {s}. قلّل الكمية من السلة.", errCode: "كود الخصم مبقاش شغال. شيله وجرب تاني.",
+  errOrder: "حصلت مشكلة في الطلب. راجع البيانات، أو كلمنا على واتساب.", confTitleId: "طلب {id} اتسجل",
+  confSubLive: "طلبك وصلنا. ابعته على واتساب كمان عشان نأكده أسرع.", shotAlt: "صورة التحويل اللي اخترتها",
+  revTitle: "آراء العملاء", stars: "{n} من ٥ نجوم",
 };
 // English strings that only JS uses; everything else is read from the page itself
 const EN2 = { stockIn: "In stock", stockLow: "Only {n} left", stockOut: "Sold out", pickGov: "Choose a governorate", itemLine: "Size {s} x {q}",
@@ -74,7 +85,14 @@ const EN2 = { stockIn: "In stock", stockLow: "Only {n} left", stockOut: "Sold ou
   close: "Close", remove: "Remove", less: "One fewer", more: "One more", shipNote: "Delivery is added at checkout.", checkoutBtn: "Checkout",
   pName: "Racing Jacket", sub: "Subtotal", egp: "EGP", emptyTitle: "Your cart is empty", emptyBtn: "See the jacket",
   copied: "Copied", copyFail: "Copy did not work. Select the text and copy it.", ipAttach: "In WhatsApp, tap the paperclip and attach the screenshot.",
-  whyAlt: "Why shop with us: premium quality products, fast and reliable delivery, secure payment, easy return policy." };
+  whyAlt: "Why shop with us: premium quality products, fast and reliable delivery, secure payment, easy return policy.",
+  codeOk: "Discount of {n} EGP applied", codeBad: "That code doesn't work. Check the spelling.", codeOld: "That code has expired or is used up.",
+  codeMin: "That code works on orders from {n} EGP.", tryLater: "Too many tries. Wait a few minutes, then try again.", sending: "Sending…",
+  errStock: "Only {n} left in size {s}. Lower the quantity in your cart.", errCode: "The discount code stopped working. Remove it and try again.",
+  errOrder: "Something went wrong with the order. Check the form, or message us on WhatsApp.", confTitle: "Order ready", confTitleId: "Order {id} received",
+  confSub: "Send it in WhatsApp so we can confirm it. Your order is not placed until we reply.",
+  confSubLive: "We have your order. Send it on WhatsApp too, so we can confirm it faster.", shotAlt: "Your payment screenshot",
+  stars: "{n} out of 5 stars" };
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -168,7 +186,7 @@ const EN = Object.fromEntries($$("[data-i18n]").map(el => [el.dataset.i18n, el.i
 const T = k => (lang === "ar" ? AR[k] : EN[k] ?? EN2[k]) ?? EN2[k] ?? k;
 // shortcut: the cart holds one line of the one product; make it a list when a second product arrives
 let cart = null;
-try { const c = JSON.parse(store.get("cart")); if (c && STOCK[c.size] > 0) cart = { size: c.size, qty: Math.min(10, STOCK[c.size], Math.max(1, c.qty | 0)) }; } catch {}
+try { const c = JSON.parse(store.get("cart")); if (c && STOCK[c.size] > 0) cart = { size: c.size, qty: Math.min(MAXQ, STOCK[c.size], Math.max(1, c.qty | 0)) }; } catch {}
 const saveCart = c => { cart = { ...c }; store.set("cart", JSON.stringify(cart)); };
 const onRender = []; // each page adds what it needs to redraw on a language switch
 
@@ -195,7 +213,7 @@ function renderCart() {
     <div class="cp-line">
       <img src="img/p-front.webp" alt="" width="72" height="108">
       <div class="cp-info"><b>${T("pName")}</b><span>${T("itemLine").replace("{s}", cart.size).replace("{q}", cart.qty)}</span>
-        <div class="cp-qty"><button type="button" data-q="-1" aria-label="${T("less")}"${cart.qty <= 1 ? " disabled" : ""}>-</button><output aria-live="polite">${cart.qty}</output><button type="button" data-q="1" aria-label="${T("more")}"${cart.qty >= Math.min(10, STOCK[cart.size]) ? " disabled" : ""}>+</button></div>
+        <div class="cp-qty"><button type="button" data-q="-1" aria-label="${T("less")}"${cart.qty <= 1 ? " disabled" : ""}>-</button><output aria-live="polite">${cart.qty}</output><button type="button" data-q="1" aria-label="${T("more")}"${cart.qty >= Math.min(MAXQ, STOCK[cart.size]) ? " disabled" : ""}>+</button></div>
         <button type="button" class="p-link" data-q="0">${T("remove")}</button></div>
       <b class="cp-price">${fmt(PRICE * cart.qty)} ${egp}</b>
     </div>
@@ -208,7 +226,7 @@ cpBody.addEventListener("click", e => {
   const b = e.target.closest("[data-q]"); if (!b || !cart) return;
   const q = +b.dataset.q;
   if (q === 0) { cart = null; store.set("cart", ""); }
-  else saveCart({ size: cart.size, qty: Math.min(10, STOCK[cart.size], Math.max(1, cart.qty + q)) });
+  else saveCart({ size: cart.size, qty: Math.min(MAXQ, STOCK[cart.size], Math.max(1, cart.qty + q)) });
   render();
   $(q === 0 ? "#cpBody .btn" : `#cpBody [data-q="${q}"]:not(:disabled)`)?.focus(); // keep focus inside the panel after it redraws
 });
@@ -244,13 +262,13 @@ if (page === "product") {
   pills.addEventListener("click", e => { const b = e.target.closest("button:not(:disabled)"); if (b) setSize(b.dataset.size); });
   tower.addEventListener("click", e => { const b = e.target.closest("button"); if (b) setSize(b.dataset.size); });
   bbSize.addEventListener("change", () => setSize(bbSize.value));
-  qtyEl.addEventListener("input", () => { sel.qty = Math.min(10, STOCK[sel.size], Math.max(1, parseInt(qtyEl.value, 10) || 1)); renderSel(); });
+  qtyEl.addEventListener("input", () => { sel.qty = Math.min(MAXQ, STOCK[sel.size], Math.max(1, parseInt(qtyEl.value, 10) || 1)); renderSel(); });
 
   function renderSel() {
     const [, c, l] = SIZES.find(x => x[0] === sel.size);
     $$("button", pills).forEach(b => { b.setAttribute("aria-checked", b.dataset.size === sel.size); b.disabled = STOCK[b.dataset.size] <= 0; });
     $$("button", tower).forEach(b => { b.dataset.on = b.dataset.size === sel.size; b.setAttribute("aria-checked", b.dataset.size === sel.size); });
-    bbSize.value = sel.size; qtyEl.value = sel.qty; qtyEl.max = Math.min(10, STOCK[sel.size]);
+    bbSize.value = sel.size; qtyEl.value = sel.qty; qtyEl.max = Math.min(MAXQ, STOCK[sel.size]);
     const left = STOCK[sel.size], st = $("#stock");
     st.textContent = left <= 0 ? T("stockOut") : left <= 5 ? T("stockLow").replace("{n}", left) : T("stockIn");
     st.classList.toggle("low", left <= 5);
@@ -291,13 +309,37 @@ if (page === "product") {
   // phone: a buy bar appears once the main Add to cart button scrolls away
   const bar = $("#buyBar"); bar.hidden = false;
   new IntersectionObserver(([x]) => bar.classList.toggle("show", !x.isIntersecting)).observe($("#addCart"));
+
+  // reviews approved in the admin; customer text goes in with textContent, never as HTML
+  if (REVIEWS.length) {
+    $("#reviews").hidden = false;
+    $("#revList").append(...REVIEWS.map(r => {
+      const n = Math.max(0, Math.min(5, r.rating | 0)), li = document.createElement("li");
+      li.dir = "auto"; // each review reads in its own language
+      const stars = Object.assign(document.createElement("span"), { className: "stars", textContent: "★".repeat(n) + "☆".repeat(5 - n) });
+      stars.setAttribute("role", "img"); stars.dataset.n = n;
+      li.append(stars, Object.assign(document.createElement("p"), { textContent: r.text }),
+        Object.assign(document.createElement("b"), { textContent: r.name + (r.city ? " · " + r.city : "") }));
+      return li;
+    }));
+    onRender.push(() => $$("#revList .stars").forEach(s => s.setAttribute("aria-label", T("stars").replace("{n}", s.dataset.n))));
+  }
 }
 
-// ---------- checkout page: summary from the cart, then the order goes out on WhatsApp ----------
+// ---------- checkout page: summary from the cart, the order is saved on the server, then it goes out on WhatsApp ----------
 if (page === "checkout") {
   const gov = $("#f-gov"), form = $("#orderForm"), confirmBox = $("#confirm"), phone = $("#f-phone"), shot = $("#f-shot"), ipBox = $("#ipBox");
+  const codeIn = $("#f-code"), codeMsg = $("#codeMsg"), formErr = $("#formErr"), sendBtn = $("#sendBtn"), sendText = $("#sendText");
+  let disc = 0, discCode = "", discSub = 0, codeState = null, placed = null; // placed: the order the server saved
   const shipFee = () => gov.value ? (SHIP[gov.value] ?? SHIP.other) : null;
   const instapay = () => form.elements.pay.value === "instapay";
+  const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; }; // live regions speak only when the text really changes
+  // payment ways turned off in the admin are removed, not greyed out
+  const ipRadio = $("[name=pay][value=instapay]", form), codRadio = $("[name=pay][value=cod]", form);
+  if (!INSTAPAY) ipRadio.closest("label").hidden = true;
+  if (!PAY_COD && INSTAPAY) { codRadio.closest("label").hidden = true; ipRadio.checked = true; }
+  $("#codeBox").hidden = !LIVE; // codes are checked by the server
+
   function renderSum() {
     const keep = gov.value, ar = lang === "ar";
     gov.innerHTML = `<option value="">${ar ? "اختار" : "Choose"}</option>` + GOVS.map(([en, a]) => `<option value="${en}">${ar ? a : en}</option>`).join("");
@@ -305,72 +347,124 @@ if (page === "checkout") {
     $("#order").hidden = !cart; $("#emptyCart").hidden = !!cart;
     if (!cart) return;
     const sub = PRICE * cart.qty, fee = shipFee(), egp = T("egp");
+    if (disc && discSub !== sub) { disc = 0; discCode = ""; codeState = null; } // the quantity changed: the code is checked again on Apply
     $("#sumItem").textContent = T("itemLine").replace("{s}", cart.size).replace("{q}", cart.qty);
     $("#sumLine").textContent = `${fmt(sub)} ${egp}`;
     $("#sumSub").textContent = `${fmt(sub)} ${egp}`;
+    $("#sumDisc").hidden = !disc; $("#sumDiscAmt").textContent = `−${fmt(disc)} ${egp}`;
     $("#sumShip").textContent = fee === null ? T("pickGov") : `${fmt(fee)} ${egp}`;
-    $("#sumTotal").textContent = `${fmt(sub + (fee ?? 0))} ${egp}`;
+    setText($("#sumTotal"), `${fmt(sub - disc + (fee ?? 0))} ${egp}`);
+    setText(codeMsg, codeState ? T(codeState.key).replace("{n}", fmt(codeState.n || 0)) : "");
+    codeMsg.classList.toggle("fail", !!codeState?.bad); codeIn.setAttribute("aria-invalid", !!codeState?.bad);
     // InstaPay: the amount to send is only known once delivery is
     ipBox.hidden = shot.disabled = !instapay();
     $("#ipId").textContent = INSTAPAY;
-    $("#ipAmt").textContent = fee === null ? "-" : `${fmt(sub + fee)} ${egp}`;
+    $("#ipAmt").textContent = fee === null ? "-" : `${fmt(sub - disc + fee)} ${egp}`;
     $("#copyAmt").disabled = fee === null; $("#ipHint").hidden = fee !== null;
+    $("#confTitle").textContent = placed ? T("confTitleId").replace("{id}", placed.id) : T("confTitle");
+    $("#confSub").textContent = T(placed ? "confSubLive" : "confSub");
+    if (!sendBtn.disabled) sendText.textContent = T("send");
   }
   onRender.push(renderSum);
   gov.addEventListener("change", renderSum);
   form.addEventListener("change", e => { if (e.target.name === "pay") renderSum(); });
 
+  // discount code: the server prices it; Enter in the field applies the code instead of sending the order
+  const CODE_ERR = { min: "codeMin", expired: "codeOld", used_up: "codeOld", slow_down: "tryLater", net: "tryLater" };
+  async function applyCode() {
+    const code = codeIn.value.trim();
+    let r = { error: "empty" };
+    if (code) {
+      const fd = new FormData(); fd.append("code", code); fd.append("qty", cart.qty);
+      try { r = await (await fetch("api/coupon.php", { method: "POST", body: fd })).json(); } catch { r = { error: "net" }; }
+    }
+    if (r.ok) { disc = r.discount; discCode = r.code; discSub = PRICE * cart.qty; codeState = { key: "codeOk", n: r.discount }; }
+    else { disc = 0; discCode = ""; codeState = { key: CODE_ERR[r.error] || "codeBad", n: r.min, bad: true }; }
+    renderSum();
+  }
+  $("#codeBtn").addEventListener("click", applyCode);
+  codeIn.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); applyCode(); } });
+
   // copy buttons: the amount goes out as plain digits so banking apps accept the paste
   form.addEventListener("click", async e => {
     const b = e.target.closest("[data-copy]"); if (!b) return;
-    const text = b.dataset.copy === "amount" ? String(PRICE * cart.qty + shipFee()) : INSTAPAY, note = $("#copied");
+    const text = b.dataset.copy === "amount" ? String(PRICE * cart.qty - disc + shipFee()) : INSTAPAY, note = $("#copied");
     let failed = false;
     try { await navigator.clipboard.writeText(text); } catch { failed = true; }
     note.textContent = T(failed ? "copyFail" : "copied"); note.classList.toggle("fail", failed);
     clearTimeout(note.t); note.t = setTimeout(() => { note.textContent = ""; }, 2500);
   });
-  // screenshot: checked and previewed here; it never leaves the phone until the buyer shares it
+  // screenshot: checked and previewed here, then uploaded with the order
   let shotUrl = "";
   shot.addEventListener("change", () => {
     const f = shot.files[0], ok = !f || (f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024);
     shot.setCustomValidity(ok ? "" : "bad");
     URL.revokeObjectURL(shotUrl); shotUrl = f && ok ? URL.createObjectURL(f) : "";
     $("#shotPrev").src = shotUrl; $("#shotPrev").hidden = !shotUrl;
-    shot.classList.toggle("invalid", !ok);
+    shot.classList.toggle("invalid", !ok); shot.setAttribute("aria-invalid", !ok);
   });
 
-  form.addEventListener("submit", e => {
+  const busy = on => { sendBtn.disabled = on; sendBtn.setAttribute("aria-busy", on); sendText.textContent = T(on ? "sending" : "send"); };
+  function showErr(r) {
+    const e = r.error || "";
+    const key = e === "stock" ? "errStock" : e === "phone" ? "ePhone" : e.startsWith("coupon_") ? "errCode" : e === "slow_down" ? "tryLater" : "errOrder";
+    if (e === "stock") STOCK[cart.size] = r.left ?? 0;
+    if (e.startsWith("coupon_")) { disc = 0; discCode = ""; codeState = null; renderSum(); }
+    formErr.textContent = T(key).replace("{n}", r.left ?? 0).replace("{s}", cart.size);
+    formErr.hidden = false; formErr.focus();
+  }
+
+  form.addEventListener("submit", async e => {
     e.preventDefault();
+    if (sendBtn.disabled) return;
+    formErr.hidden = true;
     // accept Arabic-Indic digits, spaces and dashes: "٠١٠ ١٢٣٤-٥٦٧٨" becomes "01012345678"
     phone.value = phone.value.replace(/[٠-٩۰-۹]/g, d => d.charCodeAt(0) & 15).replace(/[\s-]/g, "");
     let ok = true;
-    $$("input:not([type=radio]):not(:disabled), select, textarea", form).forEach(el => {
+    $$("[required]:not(:disabled)", form).forEach(el => {
       const bad = !el.value.trim() || !el.checkValidity();
-      el.classList.toggle("invalid", bad);
+      el.classList.toggle("invalid", bad); el.setAttribute("aria-invalid", bad);
       if (bad && ok) { el.focus(); ok = false; }
     });
     if (!ok) return;
-    const d = Object.fromEntries(new FormData(form)), fee = shipFee(), sub = PRICE * cart.qty, ip = instapay();
+    const d = Object.fromEntries(new FormData(form)), ip = instapay(), file = ip && shot.files[0];
+    if (LIVE) {
+      busy(true);
+      const fd = new FormData(form);
+      fd.set("size", cart.size); fd.set("qty", cart.qty); fd.set("code", disc ? discCode : ""); fd.set("lang", lang);
+      let r = null;
+      try { r = await (await fetch("api/order.php", { method: "POST", body: fd })).json(); } catch {}
+      busy(false);
+      if (r && !r.ok) return showErr(r);
+      placed = r; // null when the server gave no answer: the order still goes out on WhatsApp
+      if (placed) store.set("cart", ""); // saved: a new visit starts with an empty cart
+    }
+    // the server's prices win: the admin may have changed them since this page loaded
+    const sub = PRICE * cart.qty, fee = placed?.delivery ?? shipFee(), off = placed?.discount ?? disc, tot = placed?.total ?? sub - off + fee;
+    const shotUp = !!placed?.proof;
     const msg = [
-      `New order - ${STORE_NAME}`, `Item: Racing Jacket, size ${cart.size} x ${cart.qty}`,
+      placed ? `Order ${placed.id} - ${STORE_NAME}` : `New order - ${STORE_NAME}`, `Item: Racing Jacket, size ${cart.size} x ${cart.qty}`,
       `Name: ${d.name}`, `Phone: ${d.phone}`, `Governorate: ${d.gov}`, `Address: ${d.addr}`,
-      `Subtotal: ${sub} EGP`, `Delivery: ${fee} EGP`, `Total: ${sub + fee} EGP`,
-      ip ? `Payment: InstaPay, ${sub + fee} EGP sent to ${INSTAPAY}. Screenshot follows in this chat.` : `Payment: cash on delivery`,
-    ].join("\n");
+      `Subtotal: ${sub} EGP`, off ? `Discount (${discCode}): -${off} EGP` : "", `Delivery: ${fee} EGP`, `Total: ${tot} EGP`,
+      ip ? `Payment: InstaPay, ${tot} EGP sent to ${INSTAPAY}. ${shotUp ? "Screenshot uploaded with the order." : "Screenshot follows in this chat."}` : `Payment: cash on delivery`,
+    ].filter(Boolean).join("\n");
     // the browser can hand the screenshot to WhatsApp through the share sheet on most phones; elsewhere the buyer attaches it in the chat
-    const file = ip && shot.files[0], canShare = !!(file && navigator.canShare?.({ files: [file] }));
+    const canShare = !!(file && navigator.canShare?.({ files: [file] }));
     const done = () => {
       $("#confText").textContent = msg; $("#confBtn").href = waLink(msg);
-      $("#ipSend").hidden = !ip; $("#shareShot").hidden = !canShare; $("#ipAttach").hidden = canShare;
+      $("#ipSend").hidden = !ip || shotUp; $("#shareShot").hidden = !canShare; $("#ipAttach").hidden = canShare;
+      $("#confEdit").hidden = !!placed; // a saved order is changed on WhatsApp, not placed a second time
+      renderSum();
       form.hidden = true; confirmBox.hidden = false; confirmBox.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+      $("#confTitle").focus({ preventScroll: true }); // the form that held focus is gone
     };
-    $("#shareShot").onclick = () => navigator.share({ files: [file], text: `InstaPay - ${d.name} - ${sub + fee} EGP` }).catch(() => {});
+    $("#shareShot").onclick = () => navigator.share({ files: [file], text: `InstaPay - ${d.name} - ${tot} EGP` }).catch(() => {});
     if (reduce) return done();
     const dots = $$("#sendBtn .mini-lights i"); // five lights fill, then the order summary appears
     dots.forEach((el, i) => setTimeout(() => el.classList.add("on"), i * 160));
     setTimeout(() => { dots.forEach(el => el.classList.remove("on")); done(); }, 5 * 160 + 200);
   });
-  $("#confEdit").addEventListener("click", () => { confirmBox.hidden = true; form.hidden = false; });
+  $("#confEdit").addEventListener("click", () => { confirmBox.hidden = true; form.hidden = false; $("#f-name").focus(); });
 }
 
 render();

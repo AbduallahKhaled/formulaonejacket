@@ -64,6 +64,11 @@
       <b class="v v-chest" id="vChest"></b><b class="v v-len" id="vLen"></b>
     </figure>
   </section>
+
+  <section class="reviews" id="reviews" aria-labelledby="revTitle" hidden>
+    <h2 id="revTitle" data-i18n="revTitle">What riders say</h2>
+    <ul class="rev-list" id="revList"></ul>
+  </section>
 </main>
 
 <!-- phone purchase bar: pick a size and buy without scrolling back up -->
@@ -73,6 +78,7 @@
   <button type="button" class="btn btn-red" id="bbAdd" data-i18n="addCart">Add to cart</button>
 </div>
 
+<script src="api/config.php"></script>
 <script src="app.js"></script>
 </body>
 </html>

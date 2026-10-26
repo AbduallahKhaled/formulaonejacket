@@ -419,3 +419,22 @@ details p { color: var(--muted); padding-bottom: 1.1rem; max-width: 60ch; }
   .hero-on .wa-float { opacity: 0; pointer-events: none; } /* phone: the hero CTAs sit where the WhatsApp button would */
   .foot { padding-bottom: 7rem; }
 }
+
+/* discount code and order errors at checkout */
+.code-row { display: flex; gap: .5rem; }
+.code-row input { flex: 1; min-width: 0; text-transform: uppercase; }
+.code-msg { font-size: .88rem; font-weight: 600; color: #127a3a; }
+.code-msg:empty { display: none; }
+.code-msg.fail { color: var(--red-ink); }
+.form-err { padding: .8rem 1rem; border: 2px solid var(--red-ink); background: #fff; color: var(--red-ink); font-weight: 600; }
+.form-err:focus-visible, .confirm h2:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+.confirm h2:focus:not(:focus-visible) { outline: 0; }
+.btn[aria-busy="true"] { cursor: progress; opacity: .8; }
+
+/* product page reviews */
+.reviews { max-width: 1200px; margin: 0 auto; }
+.reviews h2 { margin-bottom: 1.5rem; }
+.rev-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.rev-list li { background: #fff; padding: 1.25rem; display: grid; gap: .6rem; align-content: start; clip-path: var(--notch); --n: 8px; }
+.rev-list .stars { color: var(--red-ink); letter-spacing: 2px; }
+.rev-list b { font-weight: 600; font-size: .9rem; color: var(--muted); }

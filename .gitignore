@@ -1,3 +1,6 @@
 # source material, not part of the site
 src-ref/
 src-video/
+
+# orders, customers, payment screenshots, admin password
+data/

@@ -1,0 +1,31 @@
+# Formula One Jacket — Hostinger (Apache/LiteSpeed)
+Options -Indexes
+DirectoryIndex index.html
+
+RewriteEngine On
+
+# Force HTTPS (Hostinger gives free SSL; enable it in hPanel first)
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Orders, customer data, payment screenshots and admin code are never served directly
+RewriteRule ^(data|admin-sections|docs|src-ref|src-video|\.git)(/|$) - [F,L]
+
+<FilesMatch "^(lib\.php|router\.php)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+</FilesMatch>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType video/mp4 "access plus 30 days"
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
