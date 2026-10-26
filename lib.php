@@ -3,9 +3,15 @@
 // Telegram alerts, payment screenshots, backups. Plain JSON files in data/, no database.
 declare(strict_types=1);
 date_default_timezone_set('Africa/Cairo');
+// Errors go to the server log, never into the page: a crash must not print server paths to a visitor.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
 
 const FJ_ROOT = __DIR__;
 const FJ_DATA = __DIR__ . '/data';
+
+// Second lock on data/ (orders, customers, screenshots, tokens) in case the root .htaccess rules are lost or not applied.
+if (is_dir(FJ_DATA) && !is_file(FJ_DATA . '/.htaccess')) @file_put_contents(FJ_DATA . '/.htaccess', "<IfModule mod_authz_core.c>\n  Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n  Deny from all\n</IfModule>\n");
 
 /** Used until the owner saves their own in the admin (data/site.json). */
 const FJ_DEFAULTS = [
@@ -47,14 +53,20 @@ const FJ_PAY = [
 
 function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 
-function fj_clean(?string $s, int $max = 300): string {
+/** Form text: anything that is not a plain string (e.g. name[]=x) becomes '' instead of crashing the request. */
+function fj_clean(mixed $s, int $max = 300): string {
+    if (!is_string($s) && !is_int($s)) return '';
     return mb_substr(trim(str_replace(["\r", "\0"], '', (string)$s)), 0, $max);
 }
 
-function fj_base_url(): string {
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    return $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-}
+/** Request value as a string; arrays become ''. */
+function fj_str(mixed $v): string { return is_string($v) || is_int($v) ? (string)$v : ''; }
+
+/**
+ * The site address for links in Telegram alerts. Saved by the logged-in admin (admin.php), because a buyer controls
+ * the Host header of their own request and could otherwise point the owner's "open the order" link at a fake login page.
+ */
+function fj_base_url(): string { return (string)(fj_read(FJ_DATA . '/base.json')['url'] ?? ''); }
 
 /* ---------- JSON file storage ---------- */
 function fj_read(string $path): ?array {
@@ -220,10 +232,14 @@ function fj_save_proof(array $file): string {
 /** Simple per-IP limit for the public endpoints: at most $max hits per $seconds. */
 function fj_rate_ok(string $bucket, int $max, int $seconds): bool {
     $f = FJ_DATA . '/limits/' . $bucket . '-' . substr(hash('sha256', ($_SERVER['REMOTE_ADDR'] ?? '') . 'fj'), 0, 16) . '.json';
-    $hits = array_values(array_filter(fj_read($f) ?? [], fn($t) => $t > time() - $seconds));
+    $hits = array_values(array_filter(fj_read($f) ?? [], fn($t) => is_int($t) && $t > time() - $seconds));
     if (count($hits) >= $max) return false;
     $hits[] = time();
     fj_write($f, $hits);
+    // one file per visitor address: now and then drop the ones idle for a day, so the folder cannot grow forever
+    if (random_int(1, 200) === 1) {
+        foreach (glob(FJ_DATA . '/limits/*.json') ?: [] as $old) if (filemtime($old) < time() - 86400) @unlink($old);
+    }
     return true;
 }
 
@@ -237,7 +253,7 @@ function fj_backup_zip(string $path): string {
     $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($base, FilesystemIterator::SKIP_DOTS));
     foreach ($it as $file) {
         $rel = str_replace(DIRECTORY_SEPARATOR, '/', substr($file->getPathname(), strlen($base) + 1));
-        if (preg_match('#^(backups|limits)/|^admin\.json$|^login-fails\.json$|\.tmp$|^\.order\.lock$#', $rel)) continue;
+        if (preg_match('#^(backups|limits)/|^admin\.json$|^SETUP-CODE\.txt$|^config-cache\.js$|^\.htaccess$|^login-fails\.json$|\.tmp$|^\.order\.lock$#', $rel)) continue;
         $zip->addFile($file->getPathname(), $rel);
     }
     $zip->close();

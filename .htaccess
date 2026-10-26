@@ -18,12 +18,24 @@ RewriteRule ^(data|admin-sections|docs|src-ref|src-video|\.git)(/|$) - [F,L]
   </IfModule>
 </FilesMatch>
 
+# Safe defaults for every page; they change nothing on screen
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType text/css "access plus 7 days"
   ExpiresByType application/javascript "access plus 7 days"
   ExpiresByType image/webp "access plus 30 days"
   ExpiresByType video/mp4 "access plus 30 days"
+  # live prices and stock: never cached, even though it is served as JavaScript
+  <Files "config.php">
+    ExpiresActive Off
+  </Files>
 </IfModule>
 
 <IfModule mod_deflate.c>

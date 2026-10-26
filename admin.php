@@ -4,10 +4,19 @@
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
 
+ini_set('session.use_strict_mode', '1'); // never adopt a session id the server did not create
+ini_set('session.use_only_cookies', '1');
 session_set_cookie_params(['httponly' => true, 'samesite' => 'Strict', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
 session_start();
+// 8 hours without a click logs the admin out (a laptop left open, a shared computer)
+if (!empty($_SESSION['admin']) && ($_SESSION['seen'] ?? 0) < time() - 8 * 3600) { $_SESSION = []; session_regenerate_id(true); }
+$_SESSION['seen'] = time();
 header('X-Frame-Options: DENY');
 header('Cache-Control: no-store');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: same-origin');
+// The admin shows customer text: if anything ever slipped past h(), the page still cannot load outside scripts or send data away.
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'");
 
 $authFile = FJ_DATA . '/admin.json';
 $auth = fj_read($authFile);
@@ -27,13 +36,23 @@ $post = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
 
 /* ---------- First run: create the password ---------- */
 if (!$auth) {
+    // A fresh upload has no password yet, so whoever opens admin.php first would own the store. The first password
+    // therefore needs a code that only someone with access to the hosting files can read.
+    $codeFile = FJ_DATA . '/SETUP-CODE.txt';
+    if (!is_file($codeFile)) {
+        if (!is_dir(FJ_DATA)) mkdir(FJ_DATA, 0755, true);
+        file_put_contents($codeFile, bin2hex(random_bytes(8)) . "\n");
+    }
     $err = '';
     if ($post && csrf_ok()) {
-        $pw = (string)($_POST['pw'] ?? '');
-        if (strlen($pw) < 10) $err = 'Use at least 10 characters.';
+        usleep(400000);
+        $pw = fj_str($_POST['pw'] ?? '');
+        if (!hash_equals(trim((string)file_get_contents($codeFile)), trim(fj_str($_POST['setup'] ?? '')))) $err = 'The setup code is wrong. Copy it from data/SETUP-CODE.txt.';
+        elseif (strlen($pw) < 10) $err = 'Use at least 10 characters.';
         elseif ($pw !== ($_POST['pw2'] ?? '')) $err = 'The two passwords don\'t match.';
         else {
             fj_write($authFile, ['hash' => password_hash($pw, PASSWORD_DEFAULT), 'created' => date('c')]);
+            @unlink($codeFile);
             session_regenerate_id(true);
             $_SESSION['admin'] = true;
             go('', 'Password saved. Welcome to your store admin.');
@@ -44,6 +63,8 @@ if (!$auth) {
     echo '<main class="panel login"><h1>Create your admin password</h1><p class="muted">First time here. This password protects your orders and customers.</p>';
     if ($err) echo '<p class="err" id="login-err" role="alert">' . h($err) . '</p>';
     echo '<form method="post" class="settings"><input type="hidden" name="csrf" value="' . h($csrf) . '">
+      <label for="setup">Setup code</label><input class="input ltr" id="setup" name="setup" autocomplete="off" required aria-describedby="setup-hint">
+      <span class="muted small" id="setup-hint">In your hosting File Manager, open <code>data/SETUP-CODE.txt</code> and copy the code. It is deleted once the password is saved.</span>
       <label for="pw">Password</label><input class="input" id="pw" type="password" name="pw" autocomplete="new-password" required minlength="10" aria-describedby="pw-hint' . ($err ? ' login-err' : '') . '"' . $inv . '>
       <span class="muted small" id="pw-hint">At least 10 characters.</span>
       <label for="pw2">Repeat password</label><input class="input" id="pw2" type="password" name="pw2" autocomplete="new-password" required minlength="10"' . $inv . '>
@@ -65,7 +86,7 @@ if (empty($_SESSION['admin'])) {
         usleep(400000);
         if ($mine['until'] > time()) {
             $err = 'Too many wrong tries. Try again in ' . (int)ceil(($mine['until'] - time()) / 60) . ' minutes.';
-        } elseif (password_verify((string)($_POST['pw'] ?? ''), (string)$auth['hash'])) {
+        } elseif (password_verify(fj_str($_POST['pw'] ?? ''), (string)$auth['hash'])) {
             unset($fails[$ipKey]);
             fj_write($failFile, $fails);
             session_regenerate_id(true);
@@ -97,6 +118,9 @@ if (empty($_SESSION['admin'])) {
 }
 
 define('FJ_ADMIN', true);
+// The owner's own address is the one trusted for links in Telegram alerts (see fj_base_url).
+$here = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '');
+if (preg_match('#^https?://[A-Za-z0-9.-]+(:\d{1,5})?$#', $here) && $here !== fj_base_url()) fj_write(FJ_DATA . '/base.json', ['url' => $here]);
 require __DIR__ . '/admin-sections/helpers.php';
 require __DIR__ . '/admin-sections/downloads.php';
 fj_backup_daily();

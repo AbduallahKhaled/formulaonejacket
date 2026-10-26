@@ -11,6 +11,9 @@ if (isset($_GET['proof'])) {
     if (!preg_match('/^\d{8}-[a-f0-9]{16}\.(jpg|png|webp|gif)$/', $name) || !is_file($f)) { http_response_code(404); exit('Not found'); }
     header('Content-Type: ' . ['jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'gif' => 'image/gif'][pathinfo($name, PATHINFO_EXTENSION)]);
     header('Content-Length: ' . filesize($f));
+    // a buyer made this file: even opened on its own it can only ever be shown as a picture
+    header("Content-Security-Policy: default-src 'none'; img-src 'self'; sandbox");
+    header('Content-Disposition: inline; filename="' . $name . '"');
     readfile($f);
     exit;
 }
@@ -22,16 +25,18 @@ if (($_GET['export'] ?? '') === 'orders') {
     $out = fopen('php://output', 'w');
     fwrite($out, "\xEF\xBB\xBF");
     fputcsv($out, ['Order', 'Date', 'Status', 'Payment', 'Pay status', 'Reference', 'Customer', 'Phone', 'Governorate', 'Address', 'Size', 'Qty', 'Jackets (EGP)', 'Discount code', 'Discount (EGP)', 'Delivery (EGP)', 'Total (EGP)', 'Courier', 'Tracking', 'Note']);
+    // Buyers type the names and addresses: a cell starting with = + - @ would run as a formula in Excel, so it gets a leading '
+    $cell = fn($v) => is_string($v) && preg_match('/^[=+\-@\t\r]/', $v) ? "'" . $v : $v;
     foreach (fj_orders() as $o) {
         $c = $o['customer'];
         $p = $o['payment'];
-        fputcsv($out, [
+        fputcsv($out, array_map($cell, [
             $o['id'], date('Y-m-d H:i', strtotime($o['created'])), FJ_STATUSES[$o['status']] ?? $o['status'],
             $p['method'] === 'cod' ? 'Cash on delivery' : 'InstaPay', FJ_PAY[$p['status']] ?? $p['status'], $p['ref'] ?? '',
             $c['name'], $c['phone'], $c['gov'], $c['address'], $o['size'], (int)$o['qty'], (int)$o['unit_price'] * (int)$o['qty'],
             $o['coupon'], (int)$o['discount'], (int)$o['delivery_fee'], (int)$o['total'],
             $o['shipping']['courier'] ?? '', $o['shipping']['tracking'] ?? '', $o['note'] ?? '',
-        ]);
+        ]));
     }
     fclose($out);
     exit;
