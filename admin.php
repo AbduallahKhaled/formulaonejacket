@@ -196,13 +196,13 @@ function page_head(string $title): void { ?>
 .side nav{display:grid;gap:2px}.side nav a{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;color:var(--muted);text-decoration:none;font-size:.92rem}.side nav a.on,.side nav a:hover{background:var(--surface-2);color:#fff}.side nav a.on{box-shadow:inset 3px 0 var(--red)}
 .navlabel{display:block;margin:14px 12px 4px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
 .badge{min-width:22px;padding:1px 7px;background:var(--red);color:#fff;font-size:.72rem;font-weight:700;text-align:center}
-.main{min-width:0;display:grid;gap:18px;align-content:start}
+.main{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-content:start}
 .h1{font:italic 800 2rem "Barlow Condensed",sans-serif;margin:0;text-transform:uppercase}.h3{font-size:1rem;margin:20px 0 8px}
 .panel h2{font-size:1.1rem;margin:0 0 14px}.head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.head h2{margin:0}
 @media(max-width:900px){.shell{grid-template-columns:1fr}.side{position:static}.side nav{display:flex;overflow-x:auto;gap:4px}.side nav a{white-space:nowrap}.navlabel{display:none}}
 .plain{list-style:none;padding:0;margin:0;display:grid;gap:10px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}.kpis>*{display:block;padding:16px;background:var(--surface);border:1px solid var(--line);color:inherit;text-decoration:none}.kpis a:hover{border-color:var(--red)}.kpis span{display:block;color:var(--muted);font-size:.8rem}.kpis b{display:block;font:700 1.7rem "Barlow Condensed",sans-serif;margin-top:4px}.kpis em{display:block;font-style:normal;color:var(--faint);font-size:.75rem}
-.grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:start}.grid2>*{min-width:0}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:start}.grid2>*{min-width:0}@media(max-width:1280px){.grid2{grid-template-columns:minmax(0,1fr)}}
 .tbl{width:100%;border-collapse:collapse}.tbl th,.tbl td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:.9rem;vertical-align:top}.tbl th{color:var(--muted);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em}.scroll{overflow-x:auto}
 .st,.pay,.pill{font-size:.72rem;font-weight:700;padding:3px 9px;background:var(--surface-2);white-space:nowrap}
 .st-new,.pay-awaiting,.pill.warn{background:rgba(255,184,77,.16);color:#ffc971}.st-confirmed,.pay-sent{background:rgba(55,118,255,.2);color:#a9c3ff}.st-shipped{background:rgba(140,82,255,.2);color:#cdb6ff}
@@ -211,6 +211,8 @@ function page_head(string $title): void { ?>
 .order .inner{padding:0 16px 16px;gap:24px}.order p{margin:6px 0}.order p .muted{display:inline-block;min-width:110px}
 .paybox{margin:0 0 12px;padding:12px;border:1px solid var(--line)}.proof-thumb{max-width:180px;max-height:180px;border:1px solid var(--line);display:block}
 .payform,.shipform,.status-form,.actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.payform .input,.shipform .input,.status-form .input{width:auto;max-width:200px;min-height:36px;font-size:.85rem}.actions form{margin:0}
+/* in a table the actions stay a real cell (flex would push them out of the column); the buttons wrap inside it */
+.tbl td.actions{display:table-cell;width:1%}.tbl td.actions>*{display:inline-flex;margin:0 4px 6px 0}.tbl td.actions .btn{white-space:nowrap}
 .shiprow{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--line)}.danger{color:#ff8a84}
 .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 16px}.chip{padding:6px 12px;border:1px solid var(--line);color:var(--muted);font-size:.85rem;text-decoration:none}.chip.on,.chip:hover{background:var(--surface-2);color:#fff}.search{margin-left:auto;min-width:220px;flex:1;max-width:360px}
 .stock .num,.num{max-width:110px;min-height:38px}

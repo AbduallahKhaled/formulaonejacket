@@ -168,6 +168,7 @@ elseif ($tab === 'orders'):
               <button class="btn btn-ghost btn-sm" aria-label="Save note, order <?= h($o['id']) ?>">Save note</button>
             </form>
             <p class="muted small" style="margin-top:12px">History: <?= h(implode(' → ', array_map(fn($x) => (FJ_STATUSES[$x['status']] ?? $x['status']) . ' ' . date('j M H:i', strtotime($x['at'])), $o['history'] ?? []))) ?></p>
+            <form method="post" style="margin-top:12px"><?= adm_form('order_delete', ['id' => $o['id'], 'back' => 'orders']) ?><button class="btn btn-ghost btn-sm danger" aria-label="Delete order <?= h($o['id']) ?>" onclick="return confirm('Delete order <?= h($o['id']) ?> for good? This cannot be undone. To keep a record, mark it Cancelled instead.')">Delete order</button></form>
           </div>
         </div>
       </details>

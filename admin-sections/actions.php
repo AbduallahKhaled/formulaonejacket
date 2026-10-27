@@ -6,6 +6,16 @@ if (!defined('FJ_ADMIN')) { http_response_code(403); exit; }
 $back = isset(ADM_MENU[$_POST['back'] ?? '']) ? $_POST['back'] : 'orders';
 
 /* ---------- Orders ---------- */
+if ($action === 'order_delete') {
+    $id = (string)($_POST['id'] ?? '');
+    $o = fj_order($id);
+    if (!$o) go("tab=$back", 'Order not found.', true);
+    // open orders only held their jackets, so stock frees itself; a shipped order's jackets already left the shelf
+    $proof = basename((string)($o['payment']['proof'] ?? ''));
+    if ($proof !== '' && is_file(FJ_DATA . "/proofs/$proof")) unlink(FJ_DATA . "/proofs/$proof");
+    unlink(fj_order_path($id));
+    go("tab=$back", "Order $id deleted.");
+}
 if (in_array($action, ['status', 'note', 'pay_confirm', 'pay_reject', 'pay_reset', 'ship', 'deliver', 'return'], true)) {
     $id = (string)($_POST['id'] ?? '');
     $o = fj_order($id);
