@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Become an affiliate | Formula One Jacket</title>
+<meta name="description" content="Post about our racing jackets, share your own discount code and earn on every delivered order it brings in.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,800;1,700;1,800&family=Inter:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Silkscreen&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="affiliate">
+<main class="aff">
+  <div class="aff-pitch">
+    <h1 class="h" data-i18n="afTitle">Become an affiliate</h1>
+    <p class="aff-lede" data-i18n="afLede">Post about our racing jackets, give your followers your own code, and earn on every delivered order it brings in.</p>
+    <h2 data-i18n="afHowT">How it works</h2>
+    <ol class="aff-steps">
+      <li data-i18n="afHow1">Fill in the form. We read every application and reply on WhatsApp.</li>
+      <li data-i18n="afHow2">Once you are approved, you get your own code and we agree your commission with you.</li>
+      <li data-i18n="afHow3">Share the code in your posts, stories and videos. Your followers use it at checkout.</li>
+      <li data-i18n="afHow4">You earn on every order with your code that is delivered and kept. We send it to the payout account you give us.</li>
+    </ol>
+    <h2 data-i18n="afRulesT">The rules</h2>
+    <ul class="aff-rules">
+      <li data-i18n="afRule1">Commission counts only on delivered orders. Cancelled, returned or refunded orders do not count.</li>
+      <li data-i18n="afRule2">Your code is for your followers. Orders you place for yourself with it do not earn commission.</li>
+      <li data-i18n="afRule3">Do not call the jackets official Formula 1 or team merchandise. They are not.</li>
+      <li data-i18n="afRule4">No spam, fake reviews or paid ads on our store name.</li>
+      <li data-i18n="afRule5">We can end the partnership if these rules are broken.</li>
+    </ul>
+  </div>
+
+  <form class="aff-form" id="affForm" novalidate>
+    <fieldset>
+      <legend data-i18n="afYou">About you</legend>
+      <div class="field"><label for="a-name" data-i18n="fName">Full name</label>
+        <input id="a-name" name="name" required autocomplete="name" maxlength="80"><small class="err" data-i18n="eName">Please enter your name</small></div>
+      <div class="field"><label for="a-phone" data-i18n="afPhone">WhatsApp number</label>
+        <input id="a-phone" name="phone" required inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" dir="ltr" maxlength="20" pattern="^(\+?20|0)?1[0125][0-9]{8}$"><small class="err" data-i18n="ePhone">Enter a valid Egyptian mobile number</small></div>
+      <div class="field"><label for="a-email" data-i18n="afEmail">Email (optional)</label>
+        <input id="a-email" name="email" type="email" autocomplete="email" dir="ltr" maxlength="120"><small class="err" data-i18n="afEEmail">Check the email address</small></div>
+      <div class="field"><label for="a-gov" data-i18n="fGov">Governorate</label>
+        <select id="a-gov" name="gov" required></select><small class="err" data-i18n="eGov">Choose your governorate</small></div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="afWhere">Where you post</legend>
+      <div class="field"><label for="a-platform" data-i18n="afPlatform">Main platform</label>
+        <select id="a-platform" name="platform" required>
+          <option value="" data-i18n="afChoose">Choose</option><option>Instagram</option><option>TikTok</option><option>Facebook</option><option>YouTube</option><option>Snapchat</option><option value="Other" data-i18n="afOther">Other</option>
+        </select><small class="err" data-i18n="afEPick">Choose one</small></div>
+      <div class="field"><label for="a-link" data-i18n="afLink">Link to your main account</label>
+        <input id="a-link" name="link" type="url" required dir="ltr" placeholder="https://instagram.com/yourname" maxlength="200"><small class="err" data-i18n="afELink">Paste the full link, starting with https://</small></div>
+      <div class="field"><label for="a-more" data-i18n="afMore">Other accounts (optional)</label>
+        <textarea id="a-more" name="more" rows="2" dir="ltr" maxlength="400" placeholder="https://tiktok.com/@yourname"></textarea></div>
+      <div class="field"><label for="a-followers" data-i18n="afFollowers">Followers on your main account</label>
+        <select id="a-followers" name="followers" required>
+          <option value="" data-i18n="afChoose">Choose</option><option>Under 1,000</option><option>1,000 – 10,000</option><option>10,000 – 50,000</option><option>50,000 – 100,000</option><option>100,000 – 500,000</option><option>Over 500,000</option>
+        </select><small class="err" data-i18n="afEPick">Choose one</small></div>
+      <div class="field"><label for="a-plan" data-i18n="afPlan">How will you promote the jackets?</label>
+        <textarea id="a-plan" name="plan" rows="3" required maxlength="800"></textarea><small class="err" data-i18n="afEPlan">Tell us in a sentence or two</small></div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-i18n="afPay">Getting paid</legend>
+      <div class="field"><label for="a-method" data-i18n="afMethod">Payout method</label>
+        <select id="a-method" name="method" required>
+          <option value="" data-i18n="afChoose">Choose</option><option value="InstaPay">InstaPay</option><option value="Vodafone Cash">Vodafone Cash</option><option value="Bank transfer" data-i18n="afBank">Bank transfer</option>
+        </select><small class="err" data-i18n="afEPick">Choose one</small></div>
+      <div class="field"><label for="a-account" data-i18n="afAccount">Payout account (InstaPay address, wallet number or IBAN)</label>
+        <input id="a-account" name="account" required dir="ltr" maxlength="120"><small class="err" data-i18n="afEAccount">Write where we send your money</small></div>
+      <div class="field"><label for="a-code" data-i18n="afCode">Code you would like (optional)</label>
+        <input id="a-code" name="code" dir="ltr" maxlength="15" autocapitalize="characters" spellcheck="false" placeholder="YOURNAME10" pattern="[A-Za-z0-9]{3,15}"><small class="err" data-i18n="afECode">3 to 15 letters or numbers, no spaces</small></div>
+    </fieldset>
+
+    <label class="aff-agree"><input type="checkbox" id="a-agree" name="agree" value="1" required> <span data-i18n="afAgree">I have read the rules and agree to them.</span></label>
+    <p class="sign-err" id="affErr" role="alert" tabindex="-1" hidden></p>
+    <button class="btn btn-red btn-full" id="affSend" data-i18n="afSend">Send application</button>
+  </form>
+
+  <div class="aff-done" id="affDone" hidden tabindex="-1">
+    <h2 data-i18n="afDoneT">Application sent</h2>
+    <p data-i18n="afDone">Thanks. We read every application and reply on WhatsApp to the number you gave us.</p>
+  </div>
+</main>
+<script src="api/config.php"></script>
+<script src="app.js"></script>
+</body>
+</html>

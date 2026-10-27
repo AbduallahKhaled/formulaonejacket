@@ -35,7 +35,7 @@ if ($tab === 'dashboard'):
       <div class="head"><h2>New orders</h2><a class="btn btn-ghost btn-sm" href="?tab=orders&amp;status=new">All new</a></div>
       <?php if (!$new): ?><p class="muted">Nothing to confirm. New orders from the site show here until you confirm them.</p><?php else: ?>
       <div class="scroll"><table class="tbl">
-        <thead><tr><th>Order</th><th>Customer</th><th>Size</th><th>Total</th><th>Payment</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <thead><tr><th>Order</th><th>Customer</th><th>Jackets</th><th>Total</th><th>Payment</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>
         <?php foreach (array_slice($new, 0, 8) as $o): ?>
           <tr>
@@ -64,7 +64,7 @@ if ($tab === 'dashboard'):
       <?php endif; ?>
       <h3 class="h3">Stock</h3>
       <div class="sizes">
-        <?php foreach ($stock as $k => $s): ?><div class="<?= $avail[$k] <= 0 ? 'out' : ($avail[$k] <= $s['min'] ? 'low' : '') ?>"><b><?= h($k) ?></b><span><?= (int)$avail[$k] ?></span></div><?php endforeach; ?>
+        <?php foreach ($stock as $k => $s): ?><div class="<?= $avail[$k] <= 0 ? 'out' : ($avail[$k] <= $s['min'] ? 'low' : '') ?>"><b><?= h(fj_sku_label($k)) ?></b><span><?= (int)$avail[$k] ?></span></div><?php endforeach; ?>
       </div>
       <p class="muted small">Free to sell per size (in stock minus open orders).</p>
     </div>
@@ -132,7 +132,7 @@ elseif ($tab === 'orders'):
             <p><span class="muted">Placed</span> <?= h(date('j M Y, H:i', strtotime($o['created']))) ?></p>
             <p><span class="muted">Phone</span> <a class="ltr" href="<?= h(adm_wa($o, '')) ?>" target="_blank"><?= h($c['phone']) ?></a> · <a href="tel:<?= h($c['phone']) ?>">Call</a></p>
             <p><span class="muted">Deliver to</span> <?= h($c['gov']) ?>, <bdi><?= h($c['address']) ?></bdi></p>
-            <p><span class="muted">Jacket</span> Size <b><?= h($o['size']) ?></b> · <?= (int)$o['unit_price'] ?> × <?= (int)$o['qty'] ?></p>
+            <p><span class="muted">Jackets</span> <b><?= h(fj_items_text($o)) ?></b> · <?= (int)$o['unit_price'] ?> EGP each</p>
             <p><span class="muted">Delivery</span> <?= (int)$o['delivery_fee'] ?> EGP</p>
             <?php if (!empty($o['coupon'])): ?><p><span class="muted">Discount code</span> <?= h($o['coupon']) ?> (−<?= (int)$o['discount'] ?>)</p><?php endif; ?>
             <p><span class="muted">Total</span> <b><?= adm_money((int)$o['total']) ?></b></p>
@@ -299,18 +299,55 @@ elseif ($tab === 'inventory'):
     $stock = fj_stock($site);
     $held = fj_reserved($orders);
 ?>
-  <div class="head"><h1 class="h1">Inventory</h1><span class="muted"><?= array_sum(array_column($stock, 'qty')) ?> jackets in stock</span></div>
+  <div class="head"><h1 class="h1">Inventory</h1><span class="muted"><?= array_sum(array_column($stock, 'qty')) ?> jackets in stock</span>
+    <button type="button" class="btn btn-sm" id="bulkOpen" aria-expanded="false" aria-controls="bulkPanel">+ Add stock in bulk</button></div>
+  <div class="panel" id="bulkPanel" hidden>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin:0">Add stock in bulk</h2><button type="button" class="btn btn-ghost btn-sm" id="bulkClose" aria-label="Close add stock in bulk">✕ Close</button></div>
+    <p class="muted" style="margin-top:0">One row per jacket and size you received. The quantity is added to what is already on the shelf. The same jacket and size twice is added up.</p>
+    <form method="post" id="bulkForm"><?= adm_form('stock_bulk') ?>
+      <div class="scroll"><table class="tbl">
+        <thead><tr><th>Jacket (colour)</th><th>Size</th><th>Quantity to add</th><th><span class="sr-only">Remove</span></th></tr></thead>
+        <tbody id="bulkRows">
+          <tr>
+            <td><select class="input" name="b_p[]" aria-label="Jacket"><?php foreach (FJ_PRODUCTS as $id => $label): ?><option value="<?= h($id) ?>"><?= h($label) ?></option><?php endforeach; ?></select></td>
+            <td><select class="input" name="b_s[]" aria-label="Size"><?php foreach (fj_size_names($site) as $sz): ?><option><?= h($sz) ?></option><?php endforeach; ?></select></td>
+            <td><input class="input num" name="b_q[]" inputmode="numeric" placeholder="0" aria-label="Quantity to add" required></td>
+            <td><button type="button" class="btn btn-ghost btn-sm danger" data-del aria-label="Remove row">✕</button></td>
+          </tr>
+        </tbody>
+      </table></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button type="button" class="btn btn-ghost btn-sm" id="bulkAdd">+ Add row</button>
+        <button class="btn">Add to stock</button>
+      </div>
+    </form>
+  </div>
+  <script>
+  (() => {
+    const panel = document.getElementById('bulkPanel'), open = document.getElementById('bulkOpen'), rows = document.getElementById('bulkRows');
+    open.addEventListener('click', () => { panel.hidden = !panel.hidden; open.setAttribute('aria-expanded', !panel.hidden); if (!panel.hidden) rows.querySelector('select').focus(); });
+    document.getElementById('bulkClose').addEventListener('click', () => { panel.hidden = true; open.setAttribute('aria-expanded', false); open.focus(); });
+    // a new row copies the last one's jacket and size, with an empty quantity
+    document.getElementById('bulkAdd').addEventListener('click', () => {
+      const last = rows.lastElementChild, row = last.cloneNode(true);
+      row.querySelectorAll('select').forEach((s, i) => s.value = last.querySelectorAll('select')[i].value);
+      row.querySelector('input').value = '';
+      rows.append(row); row.querySelector('input').focus();
+    });
+    rows.addEventListener('click', e => { if (e.target.closest('[data-del]') && rows.children.length > 1) e.target.closest('tr').remove(); });
+  })();
+  </script>
   <div class="panel">
-    <p class="muted" style="margin-top:0">Jackets on your shelf per size. New and confirmed orders hold their jackets, so the shop only sells what is left. Marking an order shipped takes its jackets out of stock; a return puts them back. Sizes are added or removed on <a href="?tab=products">Product &amp; prices</a>.</p>
+    <p class="muted" style="margin-top:0">Jackets on your shelf per jacket and size. New and confirmed orders hold their jackets, so the shop only sells what is left. Marking an order shipped takes its jackets out of stock; a return puts them back. Sizes are added or removed on <a href="?tab=products">Product &amp; prices</a>.</p>
     <form method="post"><?= adm_form('save_stock') ?>
       <div class="scroll"><table class="tbl stock">
-        <thead><tr><th>Size</th><th>On the shelf</th><th>Low-stock line</th><th>Held by open orders</th><th>Free to sell</th><th>State</th></tr></thead>
+        <thead><tr><th>Jacket and size</th><th>On the shelf</th><th>Low-stock line</th><th>Held by open orders</th><th>Free to sell</th><th>State</th></tr></thead>
         <tbody>
         <?php foreach ($stock as $k => $s): $left = $s['qty'] - ($held[$k] ?? 0); ?>
           <tr>
-            <td><b><?= h($k) ?></b></td>
-            <td><input class="input num" name="qty[<?= h($k) ?>]" inputmode="numeric" value="<?= (int)$s['qty'] ?>" aria-label="Size <?= h($k) ?> on the shelf"></td>
-            <td><input class="input num" name="min[<?= h($k) ?>]" inputmode="numeric" value="<?= (int)$s['min'] ?>" aria-label="Size <?= h($k) ?> low-stock line"></td>
+            <td><b><?= h(fj_sku_label($k)) ?></b></td>
+            <td><input class="input num" name="qty[<?= h($k) ?>]" inputmode="numeric" value="<?= (int)$s['qty'] ?>" aria-label="<?= h(fj_sku_label($k)) ?> on the shelf"></td>
+            <td><input class="input num" name="min[<?= h($k) ?>]" inputmode="numeric" value="<?= (int)$s['min'] ?>" aria-label="<?= h(fj_sku_label($k)) ?> low-stock line"></td>
             <td><?= (int)($held[$k] ?? 0) ?></td>
             <td><b><?= $left ?></b></td>
             <td><?php if ($left < 0): ?><span class="pill bad">Short <?= -$left ?></span><?php elseif ($left === 0): ?><span class="pill bad">Sold out</span><?php elseif ($left <= $s['min']): ?><span class="pill warn">Low</span><?php else: ?><span class="pill ok">OK</span><?php endif; ?></td>
@@ -367,7 +404,17 @@ elseif ($tab === 'coupons'):
     <form class="panel settings" method="post"><?= adm_form('coupon_save', ['orig' => $editCode]) ?>
       <h2 style="margin:0"><?= $editCode ? 'Edit ' . h($editCode) : 'New code' ?></h2>
       <label for="c-code">Code</label>
-      <input class="input ltr" id="c-code" name="code" value="<?= h($editCode) ?>" required maxlength="30" placeholder="PITLANE10" style="text-transform:uppercase">
+      <div style="display:flex;gap:8px">
+        <input class="input ltr" id="c-code" name="code" value="<?= h($editCode) ?>" required maxlength="30" placeholder="PITLANE10" style="text-transform:uppercase;flex:1;min-width:0">
+        <button type="button" class="btn btn-ghost btn-sm" id="c-gen">Generate</button>
+      </div>
+      <script>
+      // FJ + 6 letters and numbers without look-alikes (0/O, 1/I); saving still refuses a code that exists
+      document.getElementById('c-gen').addEventListener('click', () => {
+        const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r = crypto.getRandomValues(new Uint8Array(6));
+        const el = document.getElementById('c-code'); el.value = 'FJ' + [...r].map(n => abc[n % abc.length]).join(''); el.focus();
+      });
+      </script>
       <div class="two">
         <div><label for="c-type">Type</label><select class="input" id="c-type" name="type"><option value="percent" <?= $e['type'] === 'percent' ? 'selected' : '' ?>>Percent off</option><option value="fixed" <?= $e['type'] === 'fixed' ? 'selected' : '' ?>>EGP off</option></select></div>
         <div><label for="c-val">Value</label><input class="input" id="c-val" name="value" inputmode="numeric" value="<?= (int)$e['value'] ?>" required></div>
@@ -388,6 +435,50 @@ elseif ($tab === 'coupons'):
 
 <?php
 /* ---------- Customers ---------- */
+elseif ($tab === 'affiliates'):
+    $apps = array_reverse(fj_read(FJ_DATA . '/affiliates.json') ?? []);
+    $coupons = fj_coupons();
+    // per approved code: delivered orders and their jacket sales after discount, the base for commission
+    $sold = [];
+    foreach ($orders as $o) if (!empty($o['coupon']) && $o['status'] === 'delivered') {
+        $sold[$o['coupon']]['n'] = ($sold[$o['coupon']]['n'] ?? 0) + 1;
+        $sold[$o['coupon']]['sales'] = ($sold[$o['coupon']]['sales'] ?? 0) + (int)$o['unit_price'] * fj_pieces($o) - (int)$o['discount'];
+    }
+?>
+  <div class="head"><h1 class="h1">Affiliates</h1><a class="btn btn-ghost btn-sm" href="affiliate.html" target="_blank">See the application page ↗</a></div>
+  <?php if (!$apps): ?><div class="panel"><p class="muted">No applications yet. The form is on affiliate.html, linked in the footer of every page.</p></div><?php endif; ?>
+  <?php foreach ($apps as $a): $st = $a['status']; ?>
+  <div class="panel">
+    <div class="head" style="margin-bottom:.6rem"><h2><?= h($a['name']) ?></h2>
+      <span class="pill <?= $st === 'approved' ? 'ok' : ($st === 'rejected' ? 'off' : 'warn') ?>"><?= h(ucfirst($st)) ?></span></div>
+    <div class="scroll"><table class="tbl"><tbody>
+      <tr><th>WhatsApp</th><td><a class="ltr" href="https://wa.me/<?= h($a['phone']) ?>" target="_blank">0<?= h(substr($a['phone'], 2)) ?></a><?= $a['email'] !== '' ? ' · <span class="ltr">' . h($a['email']) . '</span>' : '' ?> · <?= h($a['gov']) ?></td></tr>
+      <tr><th>Posts on</th><td><?= h($a['platform']) ?>, <?= h($a['followers']) ?> followers<br><a class="ltr" href="<?= h($a['link']) ?>" target="_blank" rel="noopener noreferrer nofollow"><?= h($a['link']) ?></a><?php if ($a['more'] !== ''): ?><br><span class="ltr muted small" style="white-space:pre-line"><?= h($a['more']) ?></span><?php endif; ?></td></tr>
+      <tr><th>Plan</th><td style="white-space:pre-line"><?= h($a['plan']) ?></td></tr>
+      <tr><th>Payout</th><td><?= h($a['method']) ?>: <b class="ltr"><?= h($a['account']) ?></b></td></tr>
+      <tr><th>Applied</th><td><?= h(date('j M Y, H:i', strtotime($a['created']))) ?></td></tr>
+      <?php if ($st === 'approved'): $c = $coupons[$a['code']] ?? null; $s = $sold[$a['code']] ?? ['n' => 0, 'sales' => 0]; ?>
+      <tr><th>Code</th><td><b class="ltr"><?= h($a['code']) ?></b> <?= $c ? '(' . (int)$c['value'] . '% off for followers' . (empty($c['active']) ? ', turned off' : '') . ')' : '(code deleted)' ?> · commission <?= (int)($a['commission'] ?? 0) ?>%</td></tr>
+      <tr><th>Delivered orders</th><td><?= (int)$s['n'] ?> orders, <?= adm_money((int)$s['sales']) ?> in jackets after discount. Commission owed: <b><?= adm_money((int)floor($s['sales'] * (int)($a['commission'] ?? 0) / 100)) ?></b></td></tr>
+      <?php endif; ?>
+    </tbody></table></div>
+    <?php if ($st !== 'approved'): ?>
+    <form method="post" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;max-width:720px;margin-top:1rem;align-items:end"><?= adm_form('aff_approve', ['id' => $a['id']]) ?>
+      <div><label for="ac-<?= h($a['id']) ?>">Their code</label><input class="input ltr" id="ac-<?= h($a['id']) ?>" name="code" value="<?= h($a['code']) ?>" required maxlength="30"></div>
+      <div><label for="ad-<?= h($a['id']) ?>">Discount for followers (%)</label><input class="input" id="ad-<?= h($a['id']) ?>" name="discount" inputmode="numeric" value="10" required></div>
+      <div><label for="am-<?= h($a['id']) ?>">Their commission (%)</label><input class="input" id="am-<?= h($a['id']) ?>" name="commission" inputmode="numeric" value="10" required></div>
+      <div><button class="btn btn-sm">Approve and create the code</button></div>
+    </form>
+    <?php endif; ?>
+    <div style="display:flex;gap:8px;margin-top:.8rem">
+      <?php if ($st === 'new'): ?><form method="post"><?= adm_form('aff_reject', ['id' => $a['id']]) ?><button class="btn btn-ghost btn-sm">Reject</button></form><?php endif; ?>
+      <form method="post"><?= adm_form('aff_delete', ['id' => $a['id']]) ?><button class="btn btn-ghost btn-sm danger" onclick="return confirm('Delete this application? Their code stays on Discount codes.')">Delete</button></form>
+    </div>
+  </div>
+  <?php endforeach; ?>
+
+<?php
+/* ---------- Customers ---------- */
 elseif ($tab === 'customers'):
     $q = mb_strtolower(trim((string)($_GET['q'] ?? '')));
     $people = [];
@@ -398,7 +489,7 @@ elseif ($tab === 'customers'):
         if (!in_array($o['status'], ['cancelled', 'returned'], true)) $p['orders']++;
         if ($o['status'] === 'returned') $p['returns']++;
         if (adm_is_paid($o)) { $p['paid']++; $p['spent'] += (int)$o['total']; }
-        $p['sizes'][$o['size']] = true;
+        foreach (fj_items($o) as $i) $p['sizes'][$i['size']] = true;
         $p['first'] = $o['created'];
         $people[$key] = $p;
     }
@@ -495,14 +586,17 @@ elseif ($tab === 'reports'):
         if ($o['status'] !== 'cancelled') $placed++;
         if (isset($months[$m])) {
             if ($o['status'] !== 'cancelled') $months[$m]['orders']++;
-            if ($paid) { $months[$m]['paid']++; $months[$m]['revenue'] += (int)$o['total']; $months[$m]['discount'] += (int)$o['discount']; $months[$m]['pieces'] += (int)$o['qty']; }
+            if ($paid) { $months[$m]['paid']++; $months[$m]['revenue'] += (int)$o['total']; $months[$m]['discount'] += (int)$o['discount']; $months[$m]['pieces'] += fj_pieces($o); }
         }
         if (!$paid) continue;
         $paidAll++;
         $revAll += (int)$o['total'];
-        $piecesAll += (int)$o['qty'];
-        $sizes[$o['size']]['orders'] = ($sizes[$o['size']]['orders'] ?? 0) + (int)$o['qty'];
-        $sizes[$o['size']]['revenue'] = ($sizes[$o['size']]['revenue'] ?? 0) + (int)$o['unit_price'] * (int)$o['qty'];
+        $piecesAll += fj_pieces($o);
+        foreach (fj_items($o) as $i) {
+            $k = fj_sku_label(fj_sku($i['product'], $i['size']));
+            $sizes[$k]['orders'] = ($sizes[$k]['orders'] ?? 0) + (int)$i['qty'];
+            $sizes[$k]['revenue'] = ($sizes[$k]['revenue'] ?? 0) + (int)$o['unit_price'] * (int)$i['qty'];
+        }
         $g = $o['customer']['gov'];
         $govs[$g]['orders'] = ($govs[$g]['orders'] ?? 0) + 1;
         $govs[$g]['revenue'] = ($govs[$g]['revenue'] ?? 0) + (int)$o['total'];
@@ -544,7 +638,7 @@ elseif ($tab === 'reports'):
     </table></div>
   </div>
   <div class="grid2">
-    <div class="panel"><h2>Sizes sold</h2><?php if ($sizes) $bars($sizes, 'orders', 'Size', 'Jackets'); else echo '<p class="muted">No paid orders yet.</p>'; ?>
+    <div class="panel"><h2>Jackets sold</h2><?php if ($sizes) $bars($sizes, 'orders', 'Jacket and size', 'Jackets'); else echo '<p class="muted">No paid orders yet.</p>'; ?>
       <p class="muted small">Jacket revenue, before delivery and discounts.</p>
       <h2 style="margin-top:22px">Payment method</h2><?php if ($pays) $bars($pays, 'orders', 'Method'); else echo '<p class="muted">No paid orders yet.</p>'; ?></div>
     <div class="panel"><h2>Governorates</h2><?php if ($govs) $bars($govs, 'revenue', 'Governorate'); else echo '<p class="muted">No paid orders yet.</p>'; ?></div>
@@ -563,6 +657,11 @@ elseif ($tab === 'products'):
         <div><label for="p-was">Old price (sale)</label><input class="input" id="p-was" name="was" inputmode="numeric" value="<?= (int)$site['was'] ?>"></div>
       </div>
       <span class="muted small">Old price above the price shows a “Sale” tag and strikes the old price. 0 = no sale. Orders already placed keep their price.</span>
+      <div class="two" style="max-width:420px">
+        <div><label for="p-offer">Launch price</label><input class="input" id="p-offer" name="offer_price" inputmode="numeric" value="<?= (int)$site['offer_price'] ?>"></div>
+        <div><label for="p-offer-n">Launch orders</label><input class="input" id="p-offer-n" name="offer_orders" inputmode="numeric" value="<?= (int)$site['offer_orders'] ?>"></div>
+      </div>
+      <span class="muted small">The first orders pay the launch price per jacket; the shop counts down the places left. <b><?= fj_offer_left($site, fj_orders()) ?></b> left now. Cancelled or returned launch orders give their place back. Launch price 0 = no offer.</span>
     </fieldset>
     <fieldset><legend>Sizes and measurements</legend>
       <span class="muted small">Order here = order on the site. Clear a size name to remove it, fill the empty row to add one. Stock per size is on <a href="?tab=inventory">Inventory</a>.</span>

@@ -24,7 +24,7 @@ if (($_GET['export'] ?? '') === 'orders') {
     header('Content-Disposition: attachment; filename="f1jacket-orders-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
     fwrite($out, "\xEF\xBB\xBF");
-    fputcsv($out, ['Order', 'Date', 'Status', 'Payment', 'Pay status', 'Reference', 'Customer', 'Phone', 'Governorate', 'Address', 'Size', 'Qty', 'Jackets (EGP)', 'Discount code', 'Discount (EGP)', 'Delivery (EGP)', 'Total (EGP)', 'Courier', 'Tracking', 'Note']);
+    fputcsv($out, ['Order', 'Date', 'Status', 'Payment', 'Pay status', 'Reference', 'Customer', 'Phone', 'Governorate', 'Address', 'Jackets', 'Qty', 'Jackets (EGP)', 'Discount code', 'Discount (EGP)', 'Delivery (EGP)', 'Total (EGP)', 'Courier', 'Tracking', 'Note']);
     // Buyers type the names and addresses: a cell starting with = + - @ would run as a formula in Excel, so it gets a leading '
     $cell = fn($v) => is_string($v) && preg_match('/^[=+\-@\t\r]/', $v) ? "'" . $v : $v;
     foreach (fj_orders() as $o) {
@@ -33,7 +33,7 @@ if (($_GET['export'] ?? '') === 'orders') {
         fputcsv($out, array_map($cell, [
             $o['id'], date('Y-m-d H:i', strtotime($o['created'])), FJ_STATUSES[$o['status']] ?? $o['status'],
             $p['method'] === 'cod' ? 'Cash on delivery' : 'InstaPay', FJ_PAY[$p['status']] ?? $p['status'], $p['ref'] ?? '',
-            $c['name'], $c['phone'], $c['gov'], $c['address'], $o['size'], (int)$o['qty'], (int)$o['unit_price'] * (int)$o['qty'],
+            $c['name'], $c['phone'], $c['gov'], $c['address'], fj_items_text($o), fj_pieces($o), (int)$o['unit_price'] * fj_pieces($o),
             $o['coupon'], (int)$o['discount'], (int)$o['delivery_fee'], (int)$o['total'],
             $o['shipping']['courier'] ?? '', $o['shipping']['tracking'] ?? '', $o['note'] ?? '',
         ]));
@@ -87,7 +87,7 @@ table{width:100%;border-collapse:collapse;margin-bottom:14px}th,td{text-align:le
 </div>
 <table>
   <thead><tr><th>Packed</th><th>Item</th><th>Size</th><th class="n">Qty</th><th class="n">Price</th></tr></thead>
-  <tbody><tr><td><span class="check"></span></td><td>Racing Jacket</td><td><b><?= h($o['size']) ?></b></td><td class="n"><?= (int)$o['qty'] ?></td><td class="n"><?= number_format((int)$o['unit_price'] * (int)$o['qty']) ?></td></tr></tbody>
+  <tbody><?php foreach (fj_items($o) as $i): ?><tr><td><span class="check"></span></td><td><?= h(FJ_PRODUCTS[$i['product']] ?? $i['product']) ?> racing jacket</td><td><b><?= h($i['size']) ?></b></td><td class="n"><?= (int)$i['qty'] ?></td><td class="n"><?= number_format((int)$o['unit_price'] * (int)$i['qty']) ?></td></tr><?php endforeach; ?></tbody>
 </table>
 <table class="tot">
   <?php if (!empty($o['discount'])): ?><tr><td class="n">Discount <?= h($o['coupon']) ?></td><td class="n" style="width:120px">−<?= number_format((int)$o['discount']) ?></td></tr><?php endif; ?>

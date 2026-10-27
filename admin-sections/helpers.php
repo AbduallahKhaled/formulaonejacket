@@ -11,6 +11,7 @@ const ADM_MENU = [
     'shipping' => 'Shipping',
     'inventory' => 'Inventory',
     'coupons' => 'Discount codes',
+    'affiliates' => 'Affiliates',
     'customers' => 'Customers',
     'reviews' => 'Reviews',
     'reports' => 'Reports',
@@ -67,7 +68,7 @@ function adm_set_status(array &$o, string $st): void {
     }
 }
 
-function adm_items_text(array $o): string { return 'Size ' . $o['size'] . ' × ' . (int)$o['qty']; }
+function adm_items_text(array $o): string { return fj_items_text($o); }
 
 function adm_order_link(string $id): string {
     return '<a class="ltr" href="?tab=orders&amp;q=' . h(urlencode($id)) . '#' . h($id) . '">' . h($id) . '</a>';
@@ -82,8 +83,8 @@ function adm_wa(array $o, string $kind = 'confirm'): string {
     $s = $o['shipping'] ?? [];
     $text = match ($kind) {
         'confirm' => $ar
-            ? "أهلاً {$c['name']}، معاك متجر Formula One Jacket. بنأكد طلبك {$o['id']}: جاكيت مقاس {$o['size']} × {$o['qty']}، الإجمالي {$o['total']} ج.م شامل الشحن، على العنوان: {$c['gov']}، {$c['address']}. نشحنه؟"
-            : "Hi {$c['name']}, this is Formula One Jacket. Confirming your order {$o['id']}: jacket size {$o['size']} x {$o['qty']}, total {$o['total']} EGP with delivery, to {$c['gov']}, {$c['address']}. Shall we ship it?",
+            ? "أهلاً {$c['name']}، معاك متجر Formula One Jacket. بنأكد طلبك {$o['id']}: " . fj_items_text($o) . "، الإجمالي {$o['total']} ج.م شامل الشحن، على العنوان: {$c['gov']}، {$c['address']}. نشحنه؟"
+            : "Hi {$c['name']}, this is Formula One Jacket. Confirming your order {$o['id']}: " . fj_items_text($o) . ", total {$o['total']} EGP with delivery, to {$c['gov']}, {$c['address']}. Shall we ship it?",
         'shipped' => $ar
             ? "طلبك {$o['id']} اتشحن مع " . ($s['courier'] ?? '') . (!empty($s['tracking']) ? "، رقم التتبع {$s['tracking']}" : '') . '. هيوصلك خلال ٢ لـ ٥ أيام.'
             : "Your order {$o['id']} is on its way with " . ($s['courier'] ?? '') . (!empty($s['tracking']) ? ", tracking {$s['tracking']}" : '') . '. It arrives in 2 to 5 days.',

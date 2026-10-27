@@ -59,7 +59,7 @@ if ($action === 'save_stock') {
     foreach ($stock as $k => $row) {
         foreach (['qty', 'min'] as $f) {
             $v = trim((string)($_POST[$f][$k] ?? ''));
-            if (!preg_match('/^\d{1,5}$/', $v)) go('tab=inventory', "Size $k: write whole numbers only.", true);
+            if (!preg_match('/^\d{1,5}$/', $v)) go('tab=inventory', fj_sku_label($k) . ': write whole numbers only.', true);
             $stock[$k][$f] = (int)$v;
         }
     }
@@ -67,16 +67,36 @@ if ($action === 'save_stock') {
     go('tab=inventory', 'Stock saved. The shop shows it on the next page load.');
 }
 
+if ($action === 'stock_bulk') {
+    $site = fj_site();
+    $stock = fj_stock($site);
+    $add = [];
+    foreach ((array)($_POST['b_p'] ?? []) as $i => $p) {
+        $sz = (string)($_POST['b_s'][$i] ?? '');
+        $q = trim((string)($_POST['b_q'][$i] ?? ''));
+        if (!isset(FJ_PRODUCTS[$p]) || !in_array($sz, fj_size_names($site), true)) go('tab=inventory', 'Pick a jacket and a size on every row.', true);
+        if (!preg_match('/^\d{1,4}$/', $q) || (int)$q < 1) go('tab=inventory', 'Quantities are whole numbers from 1.', true);
+        $k = fj_sku((string)$p, $sz);
+        $add[$k] = ($add[$k] ?? 0) + (int)$q;
+    }
+    if (!$add) go('tab=inventory', 'Add at least one row.', true);
+    foreach ($add as $k => $q) $stock[$k] = ['qty' => ($stock[$k]['qty'] ?? 0) + $q, 'min' => $stock[$k]['min'] ?? 2];
+    fj_write(FJ_DATA . '/stock.json', $stock + (fj_read(FJ_DATA . '/stock.json') ?? []));
+    $done = implode(', ', array_map(fn($k, $q) => "$q × " . fj_sku_label($k), array_keys($add), $add));
+    go('tab=inventory', "Added to stock: $done.");
+}
+
 /* ---------- Product, price and sizes ---------- */
 if ($action === 'save_product') {
     $site = fj_site();
-    foreach (['price' => 'Price', 'was' => 'Old price'] as $k => $label) {
+    foreach (['price' => 'Price', 'was' => 'Old price', 'offer_price' => 'Launch price', 'offer_orders' => 'Launch orders'] as $k => $label) {
         $v = trim((string)($_POST[$k] ?? '0'));
         if (!preg_match('/^\d{1,6}$/', $v === '' ? '0' : $v)) go('tab=products', "$label must be a whole number of EGP.", true);
         $site[$k] = (int)$v;
     }
     if ($site['price'] < 1) go('tab=products', 'The price must be at least 1 EGP.', true);
     if ($site['was'] && $site['was'] <= $site['price']) go('tab=products', 'The old price must be higher than the price, or 0 for no sale.', true);
+    if ($site['offer_price'] >= $site['price']) go('tab=products', 'The launch price must be lower than the price, or 0 for no launch offer.', true);
     $sizes = [];
     foreach ((array)($_POST['size'] ?? []) as $i => $name) {
         $name = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string)$name) ?? '');
@@ -182,7 +202,7 @@ if ($action === 'coupon_save') {
         'active' => !empty($_POST['active']),
         'note' => fj_clean($_POST['note'] ?? '', 120),
         'created' => $old['created'] ?? date('Y-m-d'),
-    ];
+    ] + array_intersect_key($old, ['phone' => 1]); // a sign-up code stays tied to its phone
     fj_save_coupons($all);
     go('tab=coupons', "Code $code saved.");
 }
@@ -194,6 +214,32 @@ if ($action === 'coupon_toggle' || $action === 'coupon_delete') {
     else { $all[$code]['active'] = empty($all[$code]['active']); $msg = "Code $code " . ($all[$code]['active'] ? 'turned on.' : 'turned off.'); }
     fj_save_coupons($all);
     go('tab=coupons', $msg);
+}
+
+/* ---------- Affiliates ---------- */
+if (in_array($action, ['aff_approve', 'aff_reject', 'aff_delete'], true)) {
+    $all = fj_read(FJ_DATA . '/affiliates.json') ?? [];
+    $i = array_search((string)($_POST['id'] ?? ''), array_column($all, 'id'), true);
+    if ($i === false) go('tab=affiliates', 'Application not found.', true);
+    $name = $all[$i]['name'];
+    if ($action === 'aff_delete') { array_splice($all, $i, 1); $msg = "Application from $name deleted."; }
+    elseif ($action === 'aff_reject') { $all[$i]['status'] = 'rejected'; $msg = "Application from $name rejected."; }
+    else {
+        $code = fj_coupon_code((string)($_POST['code'] ?? ''));
+        $disc = (int)($_POST['discount'] ?? 0);
+        $comm = (int)($_POST['commission'] ?? 0);
+        if (!preg_match('/^[A-Z0-9_-]{3,30}$/', $code)) go('tab=affiliates', 'The code can use letters, numbers, - and _ (3 to 30).', true);
+        if ($disc < 1 || $disc > 100 || $comm < 0 || $comm > 100) go('tab=affiliates', 'Discount is 1 to 100%, commission 0 to 100%.', true);
+        $coupons = fj_coupons();
+        if (isset($coupons[$code])) go('tab=affiliates', "The code $code already exists. Pick another one.", true);
+        $coupons[$code] = ['type' => 'percent', 'value' => $disc, 'min' => 0, 'expires' => '', 'max_uses' => 0, 'used' => 0,
+            'active' => true, 'note' => "Affiliate: $name", 'created' => date('Y-m-d')];
+        fj_save_coupons($coupons);
+        $all[$i] = ['status' => 'approved', 'code' => $code, 'commission' => $comm] + $all[$i];
+        $msg = "$name approved. Code $code is live; send it to them on WhatsApp.";
+    }
+    fj_write(FJ_DATA . '/affiliates.json', array_values($all));
+    go('tab=affiliates', $msg);
 }
 
 /* ---------- Reviews ---------- */

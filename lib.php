@@ -15,15 +15,18 @@ if (is_dir(FJ_DATA) && !is_file(FJ_DATA . '/.htaccess')) @file_put_contents(FJ_D
 
 /** Used until the owner saves their own in the admin (data/site.json). */
 const FJ_DEFAULTS = [
-    'price' => 1450,
+    'price' => 1250,
     'was' => 0,
-    'whatsapp' => '201000000000',
-    'instapay' => 'yourstore@instapay',
+    // launch offer: the first offer_orders orders pay offer_price per jacket, then the price above (0 orders = off)
+    'offer_price' => 850,
+    'offer_orders' => 10,
+    'whatsapp' => '201557707691',
+    'instapay' => 'vampotypebeats@instapay',
     'pay_cod' => true,
     'pay_instapay' => true,
     // [size, chest cm, length cm]
     'sizes' => [['S', 108, 66], ['M', 114, 68], ['L', 120, 70], ['XL', 126, 72], ['XXL', 132, 74]],
-    'ship' => ['Cairo' => 70, 'Giza' => 70],
+    'ship' => [], // governorates that cost something other than ship_other
     'ship_other' => 90,
     'max_qty' => 10,
 ];
@@ -32,6 +35,8 @@ const FJ_GOVS = ['Cairo', 'Giza', 'Alexandria', 'Qalyubia', 'Sharqia', 'Dakahlia
     'Damietta', 'Port Said', 'Ismailia', 'Suez', 'Faiyum', 'Beni Suef', 'Minya', 'Asyut', 'Sohag', 'Qena', 'Luxor', 'Aswan',
     'Red Sea', 'New Valley', 'Matrouh', 'North Sinai', 'South Sinai'];
 const FJ_ID = '/^FJ-[0-9]{6}-[A-Z0-9]{4}$/';
+/** The jackets on sale. Keep the ids in sync with PRODUCTS in app.js. All share the one price and size list from the admin. */
+const FJ_PRODUCTS = ['classic' => 'Classic', 'red' => 'Red', 'black' => 'Black'];
 
 const FJ_STATUSES = [
     'new' => 'New',
@@ -118,6 +123,17 @@ function fj_orders(): array {
     return $o;
 }
 
+/** Launch-offer orders still open: cancelled or returned offer orders give their place back. */
+function fj_offer_left(array $site, array $orders): int {
+    $used = count(array_filter($orders, fn($o) => !empty($o['offer']) && !in_array($o['status'] ?? '', ['cancelled', 'returned'], true)));
+    return (int)$site['offer_price'] > 0 ? max(0, (int)$site['offer_orders'] - $used) : 0;
+}
+
+/** The price per jacket right now: the launch price while offer orders are left. */
+function fj_unit_price(array $site, array $orders): int {
+    return fj_offer_left($site, $orders) > 0 ? (int)$site['offer_price'] : (int)$site['price'];
+}
+
 function fj_eg_phone(string $v): string {
     $d = preg_replace('/\D+/', '', $v) ?? '';
     if (str_starts_with($d, '0020')) $d = substr($d, 2);
@@ -126,26 +142,42 @@ function fj_eg_phone(string $v): string {
     return $d;
 }
 
-/* ---------- Stock per size ---------- */
-/** data/stock.json: size => {qty, min}. Sizes without a row start at 0 with a low-stock line of 3. */
+/* ---------- Stock per jacket and size ---------- */
+/** Order lines [{product, size, qty}]. Orders placed before there were several jackets hold one size and qty of the classic. */
+function fj_items(array $o): array {
+    return $o['items'] ?? [['product' => 'classic', 'size' => (string)($o['size'] ?? ''), 'qty' => (int)($o['qty'] ?? 0)]];
+}
+function fj_pieces(array $o): int { return array_sum(array_column(fj_items($o), 'qty')); }
+/** Stock key of one jacket in one size, e.g. "red:M". */
+function fj_sku(string $product, string $size): string { return "$product:$size"; }
+/** "Red M" for a stock key. */
+function fj_sku_label(string $k): string { [$p, $s] = explode(':', $k, 2) + ['', '']; return (FJ_PRODUCTS[$p] ?? $p) . " $s"; }
+function fj_items_text(array $o): string {
+    return implode(', ', array_map(fn($i) => fj_sku_label(fj_sku($i['product'], $i['size'])) . ' × ' . (int)$i['qty'], fj_items($o)));
+}
+
+/** data/stock.json: "product:size" => {qty, min}. Rows that are missing start at 0 with a low-stock line of 3. */
 function fj_stock(?array $site = null): array {
-    $s = fj_read(FJ_DATA . '/stock.json') ?? ['S' => ['qty' => 4], 'M' => ['qty' => 12], 'L' => ['qty' => 9], 'XL' => ['qty' => 2], 'XXL' => ['qty' => 0]];
+    $s = fj_read(FJ_DATA . '/stock.json') ?? ['classic:S' => ['qty' => 4], 'classic:M' => ['qty' => 12], 'classic:L' => ['qty' => 9], 'classic:XL' => ['qty' => 2]];
     $out = [];
-    foreach (fj_size_names($site ?? fj_site()) as $k) $out[$k] = ['qty' => (int)($s[$k]['qty'] ?? 0), 'min' => (int)($s[$k]['min'] ?? 3)];
+    foreach (array_keys(FJ_PRODUCTS) as $p) foreach (fj_size_names($site ?? fj_site()) as $k) {
+        $row = $s[fj_sku($p, $k)] ?? ($p === 'classic' ? $s[$k] ?? null : null); // stock.json from before held the classic by size alone
+        $out[fj_sku($p, $k)] = ['qty' => (int)($row['qty'] ?? 0), 'min' => (int)($row['min'] ?? 3)];
+    }
     return $out;
 }
 
-/** Pieces held by orders not shipped yet (new or confirmed), per size. Shipping takes them out of stock for real. */
+/** Pieces held by orders not shipped yet (new or confirmed), per stock key. Shipping takes them out of stock for real. */
 function fj_reserved(array $orders): array {
     $need = [];
     foreach ($orders as $o) {
         if (!in_array($o['status'] ?? '', ['new', 'confirmed'], true)) continue;
-        $need[$o['size']] = ($need[$o['size']] ?? 0) + (int)$o['qty'];
+        foreach (fj_items($o) as $i) $need[fj_sku($i['product'], $i['size'])] = ($need[fj_sku($i['product'], $i['size'])] ?? 0) + (int)$i['qty'];
     }
     return $need;
 }
 
-/** What the shop can still sell per size: in stock minus what open orders hold. */
+/** What the shop can still sell per stock key: in stock minus what open orders hold. */
 function fj_available(array $site, array $orders): array {
     $res = fj_reserved($orders);
     $out = [];
@@ -157,9 +189,12 @@ function fj_available(array $site, array $orders): array {
 function fj_stock_move(array &$o, int $sign): void {
     $out = !empty($o['stock_used']) && empty($o['stock_back']);
     if (($sign < 0 && $out) || ($sign > 0 && !$out)) return;
-    $stock = fj_stock();
-    $stock[$o['size']]['qty'] = (int)($stock[$o['size']]['qty'] ?? 0) + $sign * (int)$o['qty'];
-    $stock[$o['size']]['min'] ??= 3;
+    $stock = fj_stock() + (fj_read(FJ_DATA . '/stock.json') ?? []); // keeps rows of sizes taken off the site
+    foreach (fj_items($o) as $i) {
+        $k = fj_sku($i['product'], $i['size']);
+        $stock[$k]['qty'] = (int)($stock[$k]['qty'] ?? 0) + $sign * (int)$i['qty'];
+        $stock[$k]['min'] ??= 3;
+    }
     fj_write(FJ_DATA . '/stock.json', $stock);
     $o['stock_used'] = true;
     $o['stock_back'] = $sign > 0;

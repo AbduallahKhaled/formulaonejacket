@@ -13,6 +13,7 @@ header('X-Content-Type-Options: nosniff');
 // second is not trusted yet, since file times only count whole seconds.
 clearstatcache();
 $times = array_map(fn($p) => (int)@filemtime(FJ_DATA . $p), ['/orders', '/stock.json', '/site.json', '/reviews.json']);
+$times[] = (int)filemtime(FJ_ROOT . '/lib.php'); // new defaults after an update
 $key = '// ' . implode('-', $times) . "\n";
 $cacheFile = FJ_DATA . '/config-cache.js';
 $cached = is_file($cacheFile) ? (string)file_get_contents($cacheFile) : '';
@@ -24,14 +25,19 @@ $reviews = array_values(array_map(
     array_filter(array_reverse(fj_reviews()), fn($r) => !empty($r['shown']))
 ));
 
+$orders = fj_orders();
+$offerLeft = fj_offer_left($site, $orders);
 $js = 'window.STORE=' . json_encode([
-    'price' => (int)$site['price'],
-    'was' => (int)$site['was'],
+    // during the launch offer the regular price shows struck through
+    'price' => fj_unit_price($site, $orders),
+    'was' => $offerLeft ? max((int)$site['was'], (int)$site['price']) : (int)$site['was'],
+    'offerLeft' => $offerLeft,
+    'offerOf' => (int)$site['offer_orders'],
     'wa' => $site['whatsapp'],
     'instapay' => $site['pay_instapay'] ? $site['instapay'] : '',
     'cod' => (bool)$site['pay_cod'],
     'sizes' => $site['sizes'],
-    'stock' => fj_available($site, fj_orders()),
+    'stock' => fj_available($site, $orders),
     'ship' => $site['ship'],
     'shipOther' => (int)$site['ship_other'],
     'maxQty' => (int)$site['max_qty'],

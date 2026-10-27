@@ -14,8 +14,8 @@
 <main>
   <section class="empty" id="emptyCart" hidden>
     <h1 class="h" data-i18n="emptyTitle">Your cart is empty</h1>
-    <p data-i18n="emptySub">Pick your size on the jacket page, then come back here.</p>
-    <a href="product.html" class="btn btn-red" data-i18n="emptyBtn">See the jacket</a>
+    <p data-i18n="emptySub">Pick a jacket and your size in the shop, then come back here.</p>
+    <a href="shop.html" class="btn btn-red" data-i18n="emptyBtn">See the jackets</a>
   </section>
 
   <section class="order" id="order">
@@ -24,7 +24,8 @@
       <p data-i18n="orderSub">Four fields, then your order goes to our WhatsApp. We confirm, ship, you pay on delivery.</p>
       <div class="summary">
         <h2 data-i18n="sumTitle">Your order</h2>
-        <div class="sum-line"><img src="img/p-front.webp" alt="" width="64" height="96"><div><b data-i18n="pName">Racing Jacket</b><span id="sumItem"></span><a href="product.html" class="p-link" data-i18n="editCart">Change size</a></div><b id="sumLine"></b></div>
+        <div id="sumLines"></div>
+        <button type="button" class="p-link" id="editCart" data-i18n="editCart">Change jackets or sizes</button>
         <p class="sum-row"><span data-i18n="sub">Subtotal</span><b id="sumSub"></b></p>
         <p class="sum-row" id="sumDisc" hidden><span data-i18n="disc">Discount</span><b id="sumDiscAmt"></b></p>
         <p class="sum-row"><span data-i18n="ship">Delivery</span><b id="sumShip"></b></p>
