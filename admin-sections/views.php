@@ -479,6 +479,39 @@ elseif ($tab === 'affiliates'):
   <?php endforeach; ?>
 
 <?php
+elseif ($tab === 'games'):
+    // A/B/C test of the pop-up offers: each visitor sees one, picked at random (app.js). Orders count when they used that offer's code.
+    $stats = fj_read(FJ_DATA . '/games.json') ?? [];
+    $leads = array_reverse(fj_read(FJ_DATA . '/leads.json') ?? []);
+    $pct = fn(int $a, int $b) => $b ? round($a * 100 / $b, 1) . '%' : '–';
+?>
+  <div class="head"><h1 class="h1">Pop-up offers</h1></div>
+  <div class="panel">
+    <p class="muted">Each new visitor sees one of the three offers when the site opens, chosen at random. Every win asks for email and phone before the code shows. Preview one with <span class="ltr">index.html?game=wheel</span>, <span class="ltr">?game=scratch</span> or <span class="ltr">?game=claim</span>.</p>
+    <div class="scroll"><table class="tbl"><thead><tr><th>Offer</th><th>Shown</th><th>Played</th><th>Gave email + phone</th><th>Orders with its code</th><th>Sales</th><th>Leads / shown</th><th>Orders / shown</th></tr></thead><tbody>
+    <?php foreach (FJ_GAMES as $g => [$label, $codes]):
+        $st = $stats[$g] ?? []; $v = (int)($st['views'] ?? 0); $l = (int)($st['leads'] ?? 0);
+        $os = array_filter($orders, fn($o) => in_array($o['coupon'] ?? '', $codes, true) && !in_array($o['status'], ['cancelled', 'returned'], true));
+        $sales = array_sum(array_map(fn($o) => (int)$o['unit_price'] * fj_pieces($o) - (int)$o['discount'], $os)); ?>
+      <tr><td><b><?= h($label) ?></b><br><span class="muted small ltr"><?= h(implode(', ', $codes)) ?></span></td>
+        <td><?= $v ?></td><td><?= (int)($st['plays'] ?? 0) ?></td><td><?= $l ?></td><td><?= count($os) ?></td><td class="nowrap"><?= adm_money($sales) ?></td>
+        <td><b><?= $pct($l, $v) ?></b></td><td><b><?= $pct(count($os), $v) ?></b></td></tr>
+    <?php endforeach; ?>
+    </tbody></table></div>
+  </div>
+  <div class="panel">
+    <h2>Leads (<?= count($leads) ?>)</h2>
+    <?php if (!$leads): ?><p class="muted">No one has claimed a prize yet.</p><?php else: ?>
+    <div class="scroll"><table class="tbl"><thead><tr><th>When</th><th>Offer</th><th>Code</th><th>Email</th><th>WhatsApp</th></tr></thead><tbody>
+    <?php foreach (array_slice($leads, 0, 300) as $x): ?>
+      <tr><td class="nowrap"><?= h(date('j M Y, H:i', strtotime($x['created']))) ?></td><td><?= h(FJ_GAMES[$x['game']][0] ?? $x['game']) ?></td><td class="ltr"><?= h($x['code']) ?></td>
+        <td class="ltr"><?= h($x['email']) ?></td><td><a class="ltr" href="https://wa.me/<?= h($x['phone']) ?>" target="_blank">0<?= h(substr($x['phone'], 2)) ?></a></td></tr>
+    <?php endforeach; ?>
+    </tbody></table></div>
+    <?php endif; ?>
+  </div>
+
+<?php
 /* ---------- Customers ---------- */
 elseif ($tab === 'customers'):
     $q = mb_strtolower(trim((string)($_GET['q'] ?? '')));

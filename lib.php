@@ -202,7 +202,16 @@ function fj_stock_move(array &$o, int $sign): void {
 
 /* ---------- Discount codes ---------- */
 /** data/coupons.json: CODE => {type: percent|fixed, value, min, expires (Y-m-d or ''), max_uses (0 = no limit), used, active, note, created} */
-function fj_coupons(): array { return fj_read(FJ_DATA . '/coupons.json') ?? []; }
+// prize codes handed out by the spin wheel and scratch card in app.js; the admin can edit or switch them off like any code
+const FJ_PRIZE_CODES = [
+    'SPIN10'    => ['type' => 'percent', 'value' => 10, 'min' => 0, 'expires' => '', 'max_uses' => 0, 'used' => 0, 'active' => true, 'note' => 'Spin wheel prize', 'created' => '2026-10-28'],
+    'FREESHIP'  => ['type' => 'fixed', 'value' => 90, 'min' => 0, 'expires' => '', 'max_uses' => 0, 'used' => 0, 'active' => true, 'note' => 'Spin wheel prize: free delivery (90 EGP off)', 'created' => '2026-10-28'],
+    'SCRATCH10' => ['type' => 'percent', 'value' => 10, 'min' => 0, 'expires' => '', 'max_uses' => 0, 'used' => 0, 'active' => true, 'note' => 'Scratch card prize', 'created' => '2026-10-28'],
+    'CLAIM10'   => ['type' => 'percent', 'value' => 10, 'min' => 0, 'expires' => '', 'max_uses' => 0, 'used' => 0, 'active' => true, 'note' => 'Claim-your-discount pop-up', 'created' => '2026-10-28'],
+];
+// the three pop-up offers (A/B/C test) and the codes each one hands out; api/lead.php counts them, admin "Pop-up offers" compares them
+const FJ_GAMES = ['wheel' => ['Spin wheel', ['SPIN10', 'FREESHIP']], 'scratch' => ['Scratch card', ['SCRATCH10']], 'claim' => ['Claim your discount', ['CLAIM10']]];
+function fj_coupons(): array { return (fj_read(FJ_DATA . '/coupons.json') ?? []) + FJ_PRIZE_CODES; }
 function fj_save_coupons(array $c): void { ksort($c); fj_write(FJ_DATA . '/coupons.json', $c); }
 function fj_coupon_code(string $s): string { return strtoupper(preg_replace('/[^A-Za-z0-9_-]/', '', $s) ?? ''); }
 

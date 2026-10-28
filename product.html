@@ -30,7 +30,7 @@
 
       <div class="p-row">
         <span class="p-label" data-i18n="size">Size</span>
-        <a href="#fit" class="p-link" data-i18n="sizeGuide">Size guide</a>
+        <span><a href="#finder" class="p-link" data-i18n="fitFind">Find my size</a> · <a href="#fit" class="p-link" data-i18n="sizeGuide">Size guide</a></span>
       </div>
       <div class="sizes-pick" id="sizesPick" role="radiogroup" aria-label="Size"></div>
       <p class="stock" id="stock" aria-live="polite"></p>
@@ -54,6 +54,26 @@
     <div class="fit-copy">
       <h2 data-i18n="fitTitle">Fit and details</h2>
       <p class="note" data-i18n="sizeNote">Relaxed, slightly oversized fit. Between two? Take the smaller.</p>
+      <form class="finder" id="fitForm" novalidate>
+        <div class="finder-head"><h3 id="finder" data-i18n="fitFind">Find my size</h3>
+          <div class="chips" role="radiogroup" aria-label="Units"><label><input type="radio" name="unit" value="cm" checked><span>cm</span></label><label><input type="radio" name="unit" value="in"><span>in</span></label></div></div>
+        <p class="note" data-i18n="fitIntro">Three quick questions and we pick your size.</p>
+        <fieldset><legend data-i18n="q1">1. Height and weight</legend>
+          <div class="chips"><label><input type="radio" name="sex" value="m" checked><span data-i18n="gMale">Male</span></label><label><input type="radio" name="sex" value="f"><span data-i18n="gFemale">Female</span></label></div>
+          <div class="finder-hw">
+            <label><span data-i18n="fitH">Height</span><span class="unit-in"><input name="h" type="number" inputmode="decimal" required><i id="fit-hu">cm</i></span></label>
+            <label><span data-i18n="fitW">Weight</span><span class="unit-in"><input name="w" type="number" inputmode="decimal" required><i id="fit-wu">kg</i></span></label>
+          </div>
+        </fieldset>
+        <fieldset><legend data-i18n="q2">2. Your shape</legend>
+          <div class="chips"><label><input type="radio" name="shape" value="slim"><span data-i18n="shSlim">Slim</span></label><label><input type="radio" name="shape" value="average" checked><span data-i18n="shAvg">Average</span></label><label><input type="radio" name="shape" value="broad"><span data-i18n="shBroad">Broad</span></label></div>
+        </fieldset>
+        <fieldset><legend data-i18n="q3">3. How do you like it?</legend>
+          <div class="chips"><label><input type="radio" name="room" value="snug"><span data-i18n="rmSnug">Snug</span></label><label><input type="radio" name="room" value="regular" checked><span data-i18n="rmReg">Regular</span></label><label><input type="radio" name="room" value="roomy"><span data-i18n="rmRoomy">Roomy</span></label></div>
+        </fieldset>
+        <button class="btn btn-red btn-full" data-i18n="fitGo">Show my size</button>
+        <p class="fit-out" id="fitOut" aria-live="polite"></p>
+      </form>
       <!-- mock: replace with real measurements of your stock -->
       <div class="tower" id="tower" role="radiogroup" aria-label="Size guide">
         <div class="tower-head"><span></span><span data-i18n="size">Size</span><span data-i18n="chest">Chest</span><span data-i18n="length">Length</span></div>

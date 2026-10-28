@@ -11,6 +11,7 @@ const ADM_MENU = [
     'shipping' => 'Shipping',
     'inventory' => 'Inventory',
     'coupons' => 'Discount codes',
+    'games' => 'Pop-up offers',
     'affiliates' => 'Affiliates',
     'customers' => 'Customers',
     'reviews' => 'Reviews',

@@ -127,6 +127,20 @@ const AR = {
   fPass: "كلمة السر", signDone: "كود الخصم ١٠٪ بتاعك", signSaved: "هيتحط لوحده في صفحة الدفع وانت مسجل دخول. اطلب بنفس الرقم.",
   signUsed: "الكود ده اتستخدم في طلب قبل كده.", signHi: "أهلاً {n}", signOutBtn: "خروج", myAcct: "حسابي",
   ePass: "كلمة السر لازم تكون ٦ حروف أو أكتر.", eLogin: "الرقم أو كلمة السر غلط.", eExists: "فيه حساب بالرقم ده. سجل دخول.", errPhoneCode: "كود التسجيل بيشتغل بس مع الرقم اللي سجلت بيه.",
+  wheelTitle: "لف واكسب", wFree: "شحن مجاني", w10: "خصم ١٠٪", wAgain: "جرب تاني", wLuck: "حظ أوفر المرة الجاية", spinBtn: "لف",
+  gameFoot: "روح السباق. طاقة الشارع.", scratchTitle: "اخدش واكسب", scratchSub: "جاكيتك الجاية. مكسبك الجاي.", youWon: "كسبت",
+  scratchAll: "اكشف من غير خدش", scratchHere: "اخدش هنا", wonMsg: "مبروك! كسبت {p}.", codeSaved2: "الكود اتحفظ وهيتحط لوحده في صفحة الدفع.",
+  back: "رجوع", c1Title: "عايز خصم حصري؟", c1Sub: "أول طلب ليك يبدأ من هنا.", c1Btn: "افتح الخصم", noThanks: "لا، شكراً",
+  c2Title: "خد الخصم بتاعك", c2Sub: "اكتب الإيميل عشان تفتح {p}.", c2Label: "الإيميل", eEmail: "اكتب إيميل صحيح.", c2Btn: "كمّل",
+  c2Note: "كمّل عشان تخلص التسجيل.", c3Title: "خلّص التسجيل", c3Sub: "اكتب رقم موبايلك عشان تاخد {p}.", c3Label: "رقم الموبايل",
+  c3Btn: "خد الخصم", c3Note: "هنستخدم بياناتك عشان نطبق الخصم.", c4Title: "الخصم بقى بتاعك!", c4Big: "{p}", c4Btn: "شوف الجواكت", fitSex: "النوع",
+  againMsg: "لفة كمان! دوس لف.", loseMsg: "حظ أوفر المرة الجاية. خليك متابعنا.",
+  fitFind: "اعرف مقاسك", gMale: "راجل", gFemale: "ست", fitH: "الطول", fitW: "الوزن", fitGo: "وريني مقاسي",
+  fitBig: "حتى أكبر مقاس ممكن يكون ضيق. كلمنا واتساب نتأكد.", fitNone: "المقاس ده خلصان دلوقتي.",
+  fitBad: "اكتب طولك (١٤٠–٢٢٠ سم / ٥٥–٨٧ بوصة) ووزنك (٣٥–٢٠٠ كجم / ٧٧–٤٤٠ رطل).", fitIntro: "٣ أسئلة سريعة ونختارلك المقاس.",
+  q1: "١. الطول والوزن", q2: "٢. جسمك", q3: "٣. بتحبه إزاي؟", shSlim: "رفيع", shAvg: "متوسط", shBroad: "عريض",
+  rmSnug: "ضيق شوية", rmReg: "مظبوط", rmRoomy: "واسع", room_snug: "ضيق شوية", room_regular: "مظبوط", room_roomy: "واسع",
+  fitWhy: "صدرك تقريباً {c}. بتحبه {r}، فبنزود {e}: محتاج صدر جاكيت {n} أو أكتر. مقاس {s} صدره {g}.",
 };
 // English strings that only JS uses; everything else is read from the page itself
 const EN2 = { stockIn: "In stock", stockLow: "Only {n} left", stockOut: "Sold out", pickGov: "Choose a governorate", itemLine: "Size {s} x {q}",
@@ -146,7 +160,13 @@ const EN2 = { stockIn: "In stock", stockLow: "Only {n} left", stockOut: "Sold ou
   signUsed: "This code was already used on an order.", ePass: "The password needs 6 characters or more.",
   eLogin: "Wrong phone number or password.", eExists: "There is already an account with this number. Sign in instead.",
   afEAgree: "Tick the box to agree to the rules first.", afExists: "There is already an application with this number. We will reply on WhatsApp.",
-  errPhoneCode: "That sign-up code only works with the phone number you signed up with." };
+  errPhoneCode: "That sign-up code only works with the phone number you signed up with.",
+  scratchHere: "Scratch here", wonMsg: "You won {p}!", ePhone: "Enter a valid Egyptian mobile number",
+  c2Sub: "Enter your email to unlock {p}.", c3Sub: "Add your phone number to claim your {p}.", c4Big: "{p}",
+  againMsg: "One more spin! Press Spin.", loseMsg: "No prize this time. Good luck next time.",
+  fitBig: "Even our biggest size may feel snug. Ask us on WhatsApp to be sure.", fitNone: "That size is sold out right now.",
+  fitBad: "Enter your height (140–220 cm / 55–87 in) and weight (35–200 kg / 77–440 lb).", room_snug: "snug", room_regular: "regular", room_roomy: "roomy",
+  fitWhy: "Your chest is about {c}. You like it {r}, so we add {e} of room: you need a jacket chest of {n} or more. {s} measures {g}." };
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -203,6 +223,69 @@ document.body.insertAdjacentHTML("afterbegin", `
     </div>
   </div>
 </dialog>
+<dialog class="game" id="wheelBox" aria-labelledby="wheelTitle">
+  <button type="button" class="cp-x game-x" data-close data-i18n-label="close" aria-label="Close">&times;</button>
+  <svg class="mark" data-mark aria-hidden="true"></svg>
+  <h2 class="game-title" id="wheelTitle" data-i18n="wheelTitle">Spin to win</h2>
+  <div class="wheel-wrap">
+    <i class="wheel-pin" aria-hidden="true"></i>
+    <div class="wheel" id="wheel" aria-hidden="true">
+      <span data-i18n="wFree">Free shipping</span><span data-i18n="w10">10% off</span><span data-i18n="wAgain">Another try</span><span data-i18n="wLuck">Good luck next time</span>
+    </div>
+    <button type="button" class="wheel-go" id="wheelGo" data-i18n="spinBtn">Spin</button>
+  </div>
+  <p class="game-out" id="wheelOut" aria-live="polite"></p>
+  <p class="game-foot" data-i18n="gameFoot">Racing heritage. Street energy.</p>
+</dialog>
+<dialog class="game game-wide" id="scratchBox" aria-labelledby="scratchTitle">
+  <button type="button" class="cp-x game-x" data-close data-i18n-label="close" aria-label="Close">&times;</button>
+  <svg class="mark" data-mark aria-hidden="true"></svg>
+  <h2 class="game-title" id="scratchTitle" data-i18n="scratchTitle">Scratch &amp; win</h2>
+  <p class="game-sub" data-i18n="scratchSub">Your next jacket. Your next win.</p>
+  <div class="scratch">
+    <div class="scratch-prize"><small data-i18n="youWon">You won</small><b data-i18n="w10">10% off</b></div>
+    <canvas id="scratchCv" aria-label="Scratch card: drag to scratch" role="img"></canvas>
+  </div>
+  <button type="button" class="p-link" id="scratchAll" data-i18n="scratchAll">Reveal without scratching</button>
+</dialog>
+<dialog class="game claim" id="claimBox" aria-labelledby="claimT">
+  <button type="button" class="claim-back" data-i18n-label="back" aria-label="Back">&larr;</button>
+  <button type="button" class="cp-x game-x" data-close data-i18n-label="close" aria-label="Close">&times;</button>
+  <svg class="mark" data-mark aria-hidden="true"></svg>
+  <div class="claim-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div data-step="1">
+    <h2 class="claim-h" id="claimT" data-i18n="c1Title">Want an exclusive discount?</h2>
+    <p class="claim-big" data-i18n="w10">10% off</p>
+    <p class="claim-sub" data-i18n="c1Sub">Your first order starts here.</p>
+    <button type="button" class="btn btn-red btn-full" id="claimUnlock" data-i18n="c1Btn">Unlock my discount</button>
+    <button type="button" class="btn btn-ghost btn-full" data-close data-i18n="noThanks">No, thank you</button>
+  </div>
+  <form data-step="2" id="claimEmail" novalidate hidden>
+    <h2 class="claim-h" data-i18n="c2Title">Claim your discount</h2>
+    <p class="claim-sub" data-prize="c2Sub"></p>
+    <label for="c-email" data-i18n="c2Label">Email address</label>
+    <input id="c-email" type="email" autocomplete="email" required maxlength="120" placeholder="you@example.com" dir="ltr">
+    <p class="sign-err" id="c-emailErr" role="alert" hidden data-i18n="eEmail">Enter a valid email address.</p>
+    <button class="btn btn-red btn-full" data-i18n="c2Btn">Continue</button>
+    <p class="claim-note" data-i18n="c2Note">Continue to finish signing up.</p>
+  </form>
+  <form data-step="3" id="claimPhone" novalidate hidden>
+    <h2 class="claim-h" data-i18n="c3Title">Finish signing up</h2>
+    <p class="claim-sub" data-prize="c3Sub"></p>
+    <label for="c-phone" data-i18n="c3Label">Phone number</label>
+    <div class="phone-in" dir="ltr"><span>+20</span><input id="c-phone" type="tel" inputmode="tel" autocomplete="tel-national" required maxlength="14" placeholder="1xxxxxxxxx"></div>
+    <p class="sign-err" id="c-phoneErr" role="alert" hidden></p>
+    <button class="btn btn-red btn-full" data-i18n="c3Btn">Claim my discount</button>
+    <p class="claim-note" data-i18n="c3Note">We'll use your details to process your discount.</p>
+  </form>
+  <div data-step="4" hidden>
+    <h2 class="claim-h" data-i18n="c4Title">It's yours!</h2>
+    <p class="claim-big" data-prize="c4Big"></p>
+    <p><span class="game-code" id="claimCode" dir="ltr"></span></p>
+    <p class="claim-sub" data-i18n="codeSaved2">Your code is saved. It is added at checkout for you.</p>
+    <a href="shop.html" class="btn btn-red btn-full" data-i18n="c4Btn">Shop the jackets</a>
+  </div>
+</dialog>
 <div class="drawer" id="drawer" hidden><nav aria-label="Menu">${links}<a href="#" data-wa data-i18n="navWa">WhatsApp</a></nav></div>
 <div class="scrim" id="scrim" hidden></div>`);
 document.body.insertAdjacentHTML("beforeend", `
@@ -248,11 +331,11 @@ $$("[data-mark]").forEach(svg => {
   svg.innerHTML = cells(markCells) + `<text x="1" y="87" textLength="196" lengthAdjust="spacing" fill="currentColor" font-family="Barlow Condensed, sans-serif" font-style="italic" font-weight="700" font-size="12.5">${STORE_NAME.toUpperCase()}</text>`;
 });
 $$("[data-stripe]").forEach(svg => {
-  const cols = +svg.dataset.stripe, rows = 4, out = [];
-  let seed = 9; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  // brand-board stripe: a solid slanted band that breaks into thin diagonal streaks at the end
+  const cols = +svg.dataset.stripe, rows = 7, solid = Math.round(cols * .62), out = [];
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-    const t = x / cols; // solid at the start, dissolving into loose pixels at the end
-    if (t > .55 && rnd() < (t - .55) / .45) continue;
+    const t = x - solid;
+    if (t >= 0 && (t % 5 > 1 || t > cols - solid - y)) continue; // 45° streaks two cells wide, shorter toward the bottom
     out.push([x + rows - 1 - y, y]); // slanted like a speed stripe
   }
   svg.setAttribute("viewBox", `0 0 ${(cols + rows) * 10} ${rows * 10}`); svg.innerHTML = cells(out);
@@ -341,7 +424,7 @@ function renderSign() {
     $("#signCode").textContent = me.code; $("#signCode").classList.toggle("used", me.used);
     $("#signNote").textContent = T(me.used ? "signUsed" : "signSaved");
   }
-  $$(".sign-tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === signMode));
+  $$("#signOut .sign-tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === signMode));
   $$(".for-new", signForm).forEach(el => el.hidden = signMode !== "register");
   $("#s-pass").autocomplete = signMode === "register" ? "new-password" : "current-password";
   $("#signGo").textContent = T(signMode === "register" ? "signGo" : "signIn");
@@ -351,7 +434,7 @@ meReady.then(renderSign);
 $("#signBtn").addEventListener("click", () => { signErr.hidden = true; renderSign(); signPanel.showModal(); });
 $("#signClose").addEventListener("click", () => signPanel.close());
 signPanel.addEventListener("click", e => { if (e.target === signPanel) signPanel.close(); });
-$(".sign-tabs").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (b) { signMode = b.dataset.mode; signErr.hidden = true; renderSign(); } });
+$("#signOut .sign-tabs").addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (b) { signMode = b.dataset.mode; signErr.hidden = true; renderSign(); } });
 const SIGN_ERR = { phone: "ePhone", missing: "eName", short: "ePass", wrong: "eLogin", exists: "eExists", slow_down: "tryLater" };
 signForm.addEventListener("submit", async e => {
   e.preventDefault();
@@ -368,6 +451,124 @@ $("#signOutBtn").addEventListener("click", async () => {
   try { await fetch("api/account.php", { method: "POST", body: fd }); } catch {}
   me = null; signMode = "login"; renderSign();
 });
+// size finder: rough body chest in cm (regression on height and weight), nudged by build; then room for the fit they like
+const FIT_SHAPE = { slim: -4, average: 0, broad: 6 }, FIT_ROOM = { snug: 6, regular: 10, roomy: 16 };
+const fitBody = (h, w, g, shape) => .62 * w + .2 * h + (g === "f" ? 20 : 18) + FIT_SHAPE[shape];
+const fitPick = need => (SIZES.find(x => x[1] >= need) || SIZES.at(-1))[0]; // first jacket chest with enough room
+if (!S.sizes) console.assert(fitPick(fitBody(175, 75, "m", "average") + 10) === "M" && fitPick(fitBody(180, 90, "m", "average") + 10) === "L"
+  && fitPick(fitBody(165, 55, "f", "average") + 10) === "S" && fitPick(fitBody(175, 75, "m", "average") + 16) === "L" && fitPick(fitBody(190, 130, "m", "broad") + 10) === "XXL", "size finder");
+
+// ---------- pop-up offers: each visitor gets one of three (A/B/C test), shown once when the site opens ----------
+// wheel and scratch are games; claim is the plain 3-step offer. Every win goes through the email + phone steps before the code shows.
+// The admin "Pop-up offers" tab compares them: shown, played, leads, orders. ?game=wheel|scratch|claim on any page forces one (for previewing).
+// shortcut: the prize codes are shared (SPIN10, FREESHIP, SCRATCH10, CLAIM10 in lib.php), so clearing storage lets someone play again; make one-use codes server side if that gets abused
+const GAMES = ["wheel", "scratch", "claim"];
+const forced = new URLSearchParams(location.search).get("game");
+if (GAMES.includes(forced)) { store.set("ab", forced); store.set("game", ""); }
+if (!GAMES.includes(store.get("ab"))) store.set("ab", GAMES[Math.random() * 3 | 0]);
+const AB = store.get("ab");
+const stat = (action, extra = {}) => {
+  if (!LIVE) return Promise.resolve(null);
+  const fd = new FormData(); fd.set("action", action); fd.set("game", AB);
+  for (const [k, v] of Object.entries(extra)) fd.set(k, v);
+  return fetch("api/lead.php", { method: "POST", body: fd }).then(r => r.json()).catch(() => null);
+};
+$$("dialog [data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+$$("dialog.game").forEach(d => d.addEventListener("click", e => { if (e.target === d) d.close(); }));
+const wheelBox = $("#wheelBox"), scratchBox = $("#scratchBox"), claimBox = $("#claimBox");
+let played = false;
+const playOnce = () => { if (!played) { played = true; stat("play"); } };
+
+if (page !== "checkout" && !store.get("game")) setTimeout(() => {
+  if (document.querySelector("dialog[open]")) return; // busy in the cart or sign-in: try again next page
+  store.set("game", "shown");
+  stat("view");
+  if (AB === "claim") claimStep(1);
+  else { const box = AB === "wheel" ? wheelBox : scratchBox; box.showModal(); if (box === scratchBox) coat(); }
+}, $("#lights") ? 5600 : 2500); // on the home page, after the start-lights intro
+
+// claim steps: 1 unlock (claim offer only), 2 email, 3 phone, 4 the code
+let prize = { key: "w10", code: "CLAIM10" }, email = "";
+function claimStep(n) {
+  $$("[data-step]", claimBox).forEach(el => el.hidden = +el.dataset.step !== n);
+  $$(".claim-dots i", claimBox).forEach((el, i) => el.classList.toggle("on", i === Math.min(n, 3) - 1));
+  $(".claim-back", claimBox).hidden = n === 1 || n === 4 || (n === 2 && AB !== "claim");
+  $$("[data-prize]", claimBox).forEach(el => { el.textContent = T(el.dataset.prize).replace("{p}", T(prize.key)); });
+  if (!claimBox.open) claimBox.showModal();
+  $(`[data-step="${n}"] input, [data-step="${n}"] .btn`, claimBox)?.focus();
+}
+const win = (key, code) => { prize = { key, code }; setTimeout(() => { wheelBox.close(); scratchBox.close(); claimStep(2); }, reduce ? 600 : 1600); };
+$("#claimUnlock").addEventListener("click", () => { playOnce(); claimStep(2); });
+$(".claim-back", claimBox).addEventListener("click", () => claimStep($("[data-step='3']", claimBox).hidden ? 1 : 2));
+$("#claimEmail").addEventListener("submit", e => {
+  e.preventDefault();
+  const el = $("#c-email"), ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(el.value.trim());
+  $("#c-emailErr").hidden = ok; el.setAttribute("aria-invalid", !ok);
+  if (ok) { email = el.value.trim(); claimStep(3); }
+});
+$("#claimPhone").addEventListener("submit", async e => {
+  e.preventDefault();
+  const el = $("#c-phone"), err = $("#c-phoneErr");
+  el.value = el.value.replace(/[٠-٩۰-۹]/g, d => d.charCodeAt(0) & 15).replace(/[\s-]/g, "");
+  const ok = /^0?1[0125]\d{8}$/.test(el.value);
+  err.textContent = T("ePhone"); err.hidden = ok; el.setAttribute("aria-invalid", !ok);
+  if (!ok) return;
+  const r = await stat("lead", { email, phone: el.value, code: prize.code });
+  if (r && !r.ok) { err.textContent = T(r.error === "slow_down" ? "tryLater" : r.error === "phone" ? "ePhone" : "errOrder"); err.hidden = false; return; }
+  store.set("prize", prize.code); $("#claimCode").textContent = prize.code;
+  claimStep(4);
+});
+
+// wheel slices clockwise from the pointer: free delivery, 10% off, another try, no prize
+const SLICES = [["wFree", "FREESHIP", 25], ["w10", "SPIN10", 25], ["wAgain", "", 20], ["wLuck", "", 30]]; // last number: chance in %
+let turn = 0;
+$("#wheelGo").addEventListener("click", e => {
+  const go = e.currentTarget; go.disabled = true; playOnce();
+  let r = Math.random() * 100, i = 0;
+  while (r >= SLICES[i][2]) r -= SLICES[i++][2];
+  // land inside slice i (each slice is 90deg, centre at 45 + 90i), after five full turns
+  turn += 360 * 5 + (360 - turn % 360) - (45 + 90 * i) + (Math.random() * 50 - 25);
+  $("#wheel").style.transform = `rotate(${turn}deg)`;
+  setTimeout(() => {
+    const [key, code] = SLICES[i], out = $("#wheelOut");
+    if (code) { out.textContent = T("wonMsg").replace("{p}", T(key)); win(key, code); }
+    else if (key === "wAgain") { out.textContent = T("againMsg"); go.disabled = false; }
+    else out.textContent = T("loseMsg");
+  }, reduce ? 0 : 4300);
+});
+
+// scratch card: a silver coat on a canvas, wiped by pointer; past 50% wiped the prize shows
+const cv = $("#scratchCv"), cx = cv.getContext("2d");
+let scratched = false, moves = 0;
+function coat() {
+  const w = cv.width = cv.offsetWidth, h = cv.height = cv.offsetHeight;
+  const g = cx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, "#8d8d8d"); g.addColorStop(.45, "#e2e2e2"); g.addColorStop(1, "#9b9b9b");
+  cx.globalCompositeOperation = "source-over"; cx.fillStyle = g; cx.fillRect(0, 0, w, h);
+  for (let n = 0; n < w * h / 40; n++) { cx.fillStyle = `rgba(${Math.random() < .5 ? "255,255,255" : "0,0,0"},.12)`; cx.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+  cx.fillStyle = "#111"; cx.textAlign = "center"; cx.textBaseline = "middle";
+  cx.font = `italic 800 ${Math.round(h * .3)}px "Barlow Condensed", sans-serif`;
+  cx.fillText(T("scratchHere").toUpperCase(), w / 2, h / 2);
+  cx.globalCompositeOperation = "destination-out";
+}
+function reveal() {
+  if (scratched) return; scratched = true; playOnce();
+  cv.style.opacity = 0; cv.style.pointerEvents = "none"; $("#scratchAll").hidden = true;
+  win("w10", "SCRATCH10");
+}
+const wipe = e => {
+  if (!e.buttons && e.type !== "pointerdown") return;
+  playOnce();
+  const b = cv.getBoundingClientRect();
+  cx.beginPath(); cx.arc(e.clientX - b.left, e.clientY - b.top, 22, 0, 7); cx.fill();
+  if (++moves % 12) return;
+  const px = cx.getImageData(0, 0, cv.width, cv.height).data;
+  let clear = 0; for (let k = 3; k < px.length; k += 64) clear += px[k] === 0;
+  if (clear / (px.length / 64) > .5) reveal();
+};
+cv.addEventListener("pointerdown", wipe); cv.addEventListener("pointermove", wipe);
+$("#scratchAll").addEventListener("click", reveal); // keyboard and screen reader users
+
 // launch price countdown: one cell per offer order, lit while it is still open
 onRender.push(() => $$("[data-offer]").forEach(el => {
   el.hidden = !OFFER_LEFT;
@@ -401,10 +602,41 @@ if (page === "product") {
   const pills = $("#sizesPick"), tower = $("#tower"), bbSize = $("#bbSize"), qtyEl = $("#qty");
   SIZES.forEach(([s, c, l], i) => {
     pills.insertAdjacentHTML("beforeend", `<button type="button" role="radio" data-size="${s}">${s}</button>`);
-    tower.insertAdjacentHTML("beforeend", `<button type="button" class="row" role="radio" data-size="${s}"><span class="pos">${i + 1}</span><b>${s}</b><span>${c} cm</span><span>${l} cm</span></button>`);
+    tower.insertAdjacentHTML("beforeend", `<button type="button" class="row" role="radio" data-size="${s}"><span class="pos">${i + 1}</span><b>${s}</b><span data-cm="${c}"></span><span data-cm="${l}"></span></button>`);
     bbSize.add(Object.assign(new Option(s, s), { disabled: stockOf(s) <= 0 }));
   });
   const setSize = s => { if (stockOf(s) > 0) { sel.size = s; if (sel.qty > stockOf(s)) sel.qty = stockOf(s); renderSel(); } };
+
+  // size finder, right on the page: height + weight, shape, and how roomy they like it; it picks a size and says why
+  const fitForm = $("#fitForm"), FE = fitForm.elements;
+  let unit = store.get("unit") === "in" ? "in" : "cm"; // the size chart and the finder share it
+  const len = cm => unit === "in" ? `${(cm / 2.54).toFixed(1)} in` : `${Math.round(cm)} cm`;
+  function paintUnits() {
+    $$("[data-cm]").forEach(el => el.textContent = len(+el.dataset.cm));
+    FE.unit.value = unit;
+    $("#fit-hu").textContent = unit === "in" ? "in" : "cm"; $("#fit-wu").textContent = unit === "in" ? "lb" : "kg";
+    FE.h.placeholder = unit === "in" ? "69" : "175"; FE.w.placeholder = unit === "in" ? "165" : "75";
+  }
+  fitForm.addEventListener("change", e => {
+    if (e.target.name !== "unit") return;
+    unit = e.target.value; store.set("unit", unit);
+    const k = unit === "in" ? [1 / 2.54, 1 / .4536] : [2.54, .4536]; // carry typed numbers over to the new unit
+    if (FE.h.value) FE.h.value = Math.round(FE.h.value * k[0]);
+    if (FE.w.value) FE.w.value = Math.round(FE.w.value * k[1]);
+    paintUnits(); renderSel();
+  });
+  fitForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const out = $("#fitOut"), h = FE.h.value * (unit === "in" ? 2.54 : 1), w = FE.w.value * (unit === "in" ? .4536 : 1);
+    if (!(h >= 140 && h <= 220 && w >= 35 && w <= 200)) return out.replaceChildren(T("fitBad"));
+    const body = Math.round(fitBody(h, w, FE.sex.value, FE.shape.value)), need = body + FIT_ROOM[FE.room.value], s = fitPick(need), g = SIZES.find(x => x[0] === s)[1];
+    setSize(s);
+    const why = T("fitWhy").replace("{c}", len(body)).replace("{r}", T("room_" + FE.room.value)).replace("{e}", len(FIT_ROOM[FE.room.value]))
+      .replace("{n}", len(need)).replace("{s}", s).replace("{g}", len(g));
+    out.replaceChildren(Object.assign(document.createElement("b"), { className: "fit-size", textContent: s }),
+      Object.assign(document.createElement("span"), { textContent: [why, g < need ? T("fitBig") : "", stockOf(s) <= 0 ? T("fitNone") : ""].filter(Boolean).join(" ") }));
+  });
+  paintUnits();
   pills.addEventListener("click", e => { const b = e.target.closest("button:not(:disabled)"); if (b) setSize(b.dataset.size); });
   tower.addEventListener("click", e => { const b = e.target.closest("button"); if (b) setSize(b.dataset.size); });
   bbSize.addEventListener("change", () => setSize(bbSize.value));
@@ -419,7 +651,7 @@ if (page === "product") {
     st.textContent = n <= 0 ? T("stockOut") : n <= 5 ? T("stockLow").replace("{n}", n) : T("stockIn");
     st.classList.toggle("low", n <= 5);
     $("#addCart").disabled = $("#bbAdd").disabled = n <= 0; // everything sold out
-    $("#vChest").textContent = `${c} cm`; $("#vLen").textContent = `${l} cm`;
+    $("#vChest").textContent = len(c); $("#vLen").textContent = len(l);
     $(".size-fig").style.setProperty("--k", .88 + (c - 108) / 24 * .12); // line width follows chest size
     $("#askWa").href = waLink(`Hi, I have a sizing question about the ${P.name[0]} (size ${sel.size}).`);
   }
@@ -568,10 +800,14 @@ if (page === "checkout") {
   codeIn.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); applyCode(); } });
   // signed in: name and phone are filled in, and the account's 10% code is applied while it is unused
   meReady.then(() => {
-    if (!me || !cart.length) return;
-    if (!form.elements.name.value) form.elements.name.value = me.name;
-    if (!phone.value) phone.value = me.phone;
-    if (!me.used && !codeIn.value) { codeIn.value = me.code; applyCode(); }
+    if (!cart.length) return;
+    if (me) {
+      if (!form.elements.name.value) form.elements.name.value = me.name;
+      if (!phone.value) phone.value = me.phone;
+      if (!me.used && !codeIn.value) { codeIn.value = me.code; applyCode(); }
+    }
+    const won = store.get("prize"); // from the spin wheel or scratch card
+    if (LIVE && won && !codeIn.value) { codeIn.value = won; applyCode(); }
   });
 
   // copy buttons: the amount goes out as plain digits so banking apps accept the paste
@@ -661,48 +897,6 @@ if (page === "checkout") {
 render();
 
 // ---------- home: 360 turntable. Autoplay plays the video; drag, the arrow buttons and the coast after a flick seek it ----------
-// ---------- hero headline as pixel tiles, like the brand board; the h1 text stays underneath for screen readers ----------
-const h1 = $(".hero h1");
-if (h1) {
-  const cv = document.createElement("canvas"), low = document.createElement("canvas");
-  cv.className = "h1-pix"; cv.setAttribute("aria-hidden", "true"); h1.append(cv);
-  const draw = () => {
-    const on = lang !== "ar"; // the tiles need Latin capitals; Arabic keeps the normal type
-    h1.classList.toggle("pix", on); h1.style.fontSize = "";
-    if (!on) return;
-    // the real text is set in Silkscreen too, so lines break where the tiles do. One font pixel (size / 8) = 2 x 2 tiles,
-    // so the size is snapped to a whole number of screen pixels per tile.
-    const c = Math.max(2, Math.round(parseFloat(getComputedStyle(h1).fontSize) / 16)), fs = c * 16;
-    h1.style.fontSize = fs + "px";
-    const box = h1.getBoundingClientRect(), dpr = devicePixelRatio || 1, lean = 4; // one tile of slant every 4 rows
-    const W = Math.ceil(box.width / c) + 8, H = Math.ceil(box.height / c) + 2;
-    cv.width = W * c * dpr; cv.height = H * c * dpr; cv.style.width = W * c + "px"; cv.style.height = H * c + "px";
-    const out = cv.getContext("2d"); out.setTransform(dpr, 0, 0, dpr, 0, 0);
-    low.width = W; low.height = H;
-    const g = low.getContext("2d", { willReadFrequently: true }), r = document.createRange();
-    g.font = `700 ${fs}px Silkscreen`; g.textBaseline = "alphabetic"; g.letterSpacing = -c + "px";
-    const asc = g.measureText("H").fontBoundingBoxAscent;
-    for (const span of $$("span", h1)) {
-      out.fillStyle = getComputedStyle(span).getPropertyValue("--tile").trim() || "#fff";
-      const txt = span.firstChild;
-      // each word where the browser laid it out, so line breaks follow the real text
-      for (const w of txt.data.matchAll(/\S+/g)) {
-        r.setStart(txt, w.index); r.setEnd(txt, w.index + w[0].length);
-        const b = r.getClientRects()[0]; if (!b) continue;
-        const x0 = Math.round((b.left - box.left) / c), base = Math.round((b.top - box.top + asc) / c);
-        g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H);
-        g.setTransform(1 / c, 0, 0, 1 / c, 0, 0); g.fillText(w[0].toUpperCase(), x0 * c, base * c);
-        const px = g.getImageData(0, 0, W, H).data;
-        for (let y = Math.max(0, base - 12); y < Math.min(H, base + 4); y++)
-          for (let x = 0; x < W; x++) if (px[(y * W + x) * 4 + 3] > 127) out.fillRect((x + Math.floor((base - y) / lean)) * c, y * c, c - 1, c - 1);
-      }
-    }
-  };
-  onRender.push(draw);
-  new ResizeObserver(() => draw()).observe(h1);
-  document.fonts?.ready.then(draw);
-}
-
 const vid0 = $("#spin");
 if (vid0) {
   // one <video> per jacket, each loaded once: a switch shows another element instead of reloading one, so nothing flashes
